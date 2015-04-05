@@ -2,14 +2,15 @@
 #include <string.h>
 #include "g59cmdpacket.h"
 
+#if 0
 #define G59_COMMAND_OFFSET 0x00
 #define G59_COMMAND_LENGTH 8
 #define G59_ARG1_OFFSET 0x08
 #define G59_ARG1_LENGTH 8
 #define G59_ARG2_OFFSET 0x10
-#define G59_ARG2_LENGTH 8
+#define G59_ARG2_LENGTH 48
 #define G59_PACKET_LEN 64
-
+#endif
 G59CmdPacket::G59CmdPacket()
 {
     memset( (m_packet), 0, G59_PACKET_LEN);

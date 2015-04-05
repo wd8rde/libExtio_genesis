@@ -8,7 +8,7 @@
 #define G59_ARG1_OFFSET 0x08
 #define G59_ARG1_LENGTH 8
 #define G59_ARG2_OFFSET 0x10
-#define G59_ARG2_LENGTH 8
+#define G59_ARG2_LENGTH 48
 #define G59_PACKET_LEN 64
 
 class G59CmdPacket

@@ -92,19 +92,18 @@ G59Cmd::tG59Err G59Cmd::set_freq(const long freq)
 
         uint8_t regs[6];
         memset(regs, 0, sizeof(regs));
-        si570_set_frequency(freq, regs);
+        uint32_t lo_freq = freq *4; //quadature mixer clock
+        si570_set_frequency(lo_freq, regs);
         if (smooth)
         {
             cmd = "SMOOTH";
         }
 
-        fprintf(stderr,"%s:%d regs: 0x",__FUNCTION__,__LINE__);
+        arg2[0x2]=0xaa; // set i2c address in first "register"
         for(int i=0; i<6; i++)
         {
-            fprintf(stderr,"%02x ",regs[i]);
-            arg2[i]=regs[i];
+            arg2[i+0x4]=regs[i];
         }
-        fprintf(stderr,"\n");
 
         G59CmdPacket packet(cmd, arg1, arg2);
         packet.DumpPacket();
@@ -139,7 +138,7 @@ G59Cmd::tG59Err G59Cmd::set_filt(const int fltr)
 
         G59CmdPacket::tconstG59Cmd cmd = "SET_FILT";
 
-        arg2[4] = (fltr & 0xff);
+        arg2[0x4] = (fltr & 0xff);
 
         G59CmdPacket packet(cmd, arg1, arg2);
         packet.DumpPacket();
