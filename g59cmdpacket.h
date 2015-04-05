@@ -16,10 +16,10 @@ class G59CmdPacket
 public:
     typedef char* tG59Cmd;
     typedef const char* tconstG59Cmd;
-    typedef char* tG59Arg1;
-    typedef const char* tconstG59Arg1;
-    typedef char* tG59Arg2;
-    typedef const char* tconstG59Arg2;
+    typedef char tG59Arg1[G59_ARG1_LENGTH];
+    typedef const char tconstG59Arg1[G59_ARG1_LENGTH];
+    typedef char tG59Arg2[G59_ARG2_LENGTH];
+    typedef const char tconstG59Arg2[G59_ARG2_LENGTH];
     typedef unsigned char *tG59Packet;
 
     G59CmdPacket();
@@ -30,6 +30,8 @@ public:
     void SetArg1(tconstG59Arg1 arg);
     void SetArg2(tconstG59Arg1 arg);
     tG59Packet GetPacket();
+    void DumpPacket();
+
 protected:
     unsigned char m_packet[G59_PACKET_LEN];
 };

@@ -17,10 +17,10 @@ public:
     G59Cmd();
     virtual ~G59Cmd();
     bool Init(int vendor_id, int product_id);
-    void Close();
+    bool Close();
     tG59Err set_name(const char* name);
-    tG59Err set_freq(const double freq);
-    tG59Err smooth(const double freq);
+    tG59Err set_freq(const long freq);
+    tG59Err smooth(const long  freq);
     tG59Err set_filt(const int fltr);
     tG59Err af_amp(const bool on_off);
     tG59Err rf_preamp(const bool on_off);

@@ -1,5 +1,8 @@
 #include <stdio.h>
+#include <string.h>
+
 #include "g59cmd.h"
+#include "si570.h"
 
 #define LOG_ERR(...) {fprintf(stderr,__VA_ARGS__);}
 #define LOG_INFO(...) {fprintf(stderr,__VA_ARGS__);}
@@ -35,9 +38,10 @@ bool G59Cmd::Init(int vendor_id, int product_id)
     return rtn;
 }
 
-void G59Cmd::Close()
+bool G59Cmd::Close()
 {
-    close_device(mp_dev_handle, m_interface);
+    int rslt = close_device(mp_dev_handle, m_interface);
+    return (0 == rslt);
 }
 
 G59Cmd::tG59Err G59Cmd::set_name(const char* name)
@@ -49,6 +53,7 @@ G59Cmd::tG59Err G59Cmd::set_name(const char* name)
         G59CmdPacket::tconstG59Arg1 arg1 = "Genesis";
 
         G59CmdPacket packet(cmd, arg1);
+        packet.DumpPacket();
         int nBytes = write_to_device(mp_dev_handle, m_out_endpoint, packet.GetPacket(), G59_PACKET_LEN);
         if(G59_PACKET_LEN == nBytes)
         {
@@ -63,19 +68,94 @@ G59Cmd::tG59Err G59Cmd::set_name(const char* name)
     return rtn;
 }
 
-G59Cmd::tG59Err G59Cmd::set_freq(const double freq)
+G59Cmd::tG59Err G59Cmd::set_freq(const long freq)
 {
-    return OK;
+    G59Cmd::tG59Err rtn = FAILED_TO_SEND;
+    if (NULL != mp_dev_handle)
+    {
+        bool smooth = false;
+        char arg1[G59_ARG1_LENGTH];
+        memset(arg1, 0, G59_ARG1_LENGTH);
+
+        char arg2[G59_ARG2_LENGTH];
+        memset(arg2, 0, G59_ARG2_LENGTH);
+
+        G59CmdPacket::tconstG59Cmd cmd = "SET_FREQ";
+
+        char freq_str[G59_ARG1_LENGTH+1];
+        memset(freq_str, 0, G59_ARG1_LENGTH+1);
+        snprintf(freq_str, G59_ARG1_LENGTH+1, "%08ld", freq);
+        for(int i=0; i< G59_ARG1_LENGTH; i++)
+        {
+            arg1[i] = freq_str[i];
+        }
+
+        uint8_t regs[6];
+        memset(regs, 0, sizeof(regs));
+        si570_set_frequency(freq, regs);
+        if (smooth)
+        {
+            cmd = "SMOOTH";
+        }
+
+        fprintf(stderr,"%s:%d regs: 0x",__FUNCTION__,__LINE__);
+        for(int i=0; i<6; i++)
+        {
+            fprintf(stderr,"%02x ",regs[i]);
+            arg2[i]=regs[i];
+        }
+        fprintf(stderr,"\n");
+
+        G59CmdPacket packet(cmd, arg1, arg2);
+        packet.DumpPacket();
+        int nBytes = write_to_device(mp_dev_handle, m_out_endpoint, packet.GetPacket(), G59_PACKET_LEN);
+        if(G59_PACKET_LEN == nBytes)
+        {
+           rtn = OK;
+        }
+    }
+    else
+    {
+        LOG_ERR("%s:%d Error device is NULL\n",__FUNCTION__,__LINE__);
+    }
+
+    return rtn;
 }
 
-G59Cmd::tG59Err G59Cmd::smooth(const double freq)
+G59Cmd::tG59Err G59Cmd::smooth(const long freq)
 {
     return OK;
 }
 
 G59Cmd::tG59Err G59Cmd::set_filt(const int fltr)
 {
-    return OK;
+    G59Cmd::tG59Err rtn = FAILED_TO_SEND;
+    if (NULL != mp_dev_handle)
+    {
+        char arg1[G59_ARG1_LENGTH];
+        memset(arg1, 0, G59_ARG1_LENGTH);
+        char arg2[G59_ARG2_LENGTH];
+        memset(arg2, 0, G59_ARG1_LENGTH);
+
+        G59CmdPacket::tconstG59Cmd cmd = "SET_FILT";
+
+        arg2[4] = (fltr & 0xff);
+
+        G59CmdPacket packet(cmd, arg1, arg2);
+        packet.DumpPacket();
+
+        int nBytes = write_to_device(mp_dev_handle, m_out_endpoint, packet.GetPacket(), G59_PACKET_LEN);
+        if(G59_PACKET_LEN == nBytes)
+        {
+           rtn = OK;
+        }
+    }
+    else
+    {
+        LOG_ERR("%s:%d Error device is NULL\n",__FUNCTION__,__LINE__);
+    }
+
+    return rtn;
 }
 
 G59Cmd::tG59Err G59Cmd::af_amp(const bool on_off)
@@ -104,6 +184,7 @@ G59Cmd::tG59Err G59Cmd::att(const bool on_off)
         }
 
         G59CmdPacket packet(cmd);
+        packet.DumpPacket();
         int nBytes = write_to_device(mp_dev_handle, m_out_endpoint, packet.GetPacket(), G59_PACKET_LEN);
         if(G59_PACKET_LEN == nBytes)
         {

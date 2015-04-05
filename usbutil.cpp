@@ -260,14 +260,15 @@ libusb_device_handle* open_device(libusb_context *ctx, int vendor_id, int produc
 int close_device(libusb_device_handle *dev, int interface_idx)
 {
     int err =0;
-    if(libusb_kernel_driver_active(dev, interface_idx))
+    if(libusb_kernel_driver_active(dev, 0))
     {
         fprintf(stderr, "A kernel has claimed the interface, detaching it...\n");
-        if((err = libusb_detach_kernel_driver(dev, interface_idx)) != 0)
+        if((err = libusb_detach_kernel_driver(dev, 0)) != 0)
         {
             fprintf(stderr, "Failed to Disconnected the OS driver: %s\n", usbutil_error_to_string(err));
         }
     }
+    libusb_release_interface(dev, 0);
     return (err);
 }
 

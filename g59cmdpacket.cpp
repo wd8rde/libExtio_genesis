@@ -48,8 +48,7 @@ void G59CmdPacket::SetArg1(tconstG59Arg1 arg)
     }
 
     memset( (m_packet + G59_ARG1_OFFSET), 0, G59_ARG1_LENGTH);
-    size_t length = strnlen(arg, G59_ARG1_LENGTH);
-    memcpy( (m_packet + G59_ARG1_OFFSET), arg, length);
+    memcpy( (m_packet + G59_ARG1_OFFSET), arg, G59_ARG1_LENGTH);
 }
 
 void G59CmdPacket::SetArg2(tconstG59Arg2 arg)
@@ -58,14 +57,24 @@ void G59CmdPacket::SetArg2(tconstG59Arg2 arg)
     {
         return;
     }
-
     memset( (m_packet + G59_ARG2_OFFSET), 0, G59_ARG2_LENGTH);
-    size_t length = strnlen(arg, G59_ARG2_LENGTH);
-    memcpy( (m_packet + G59_ARG2_OFFSET), arg, length);
+    memcpy( (m_packet + G59_ARG2_OFFSET), arg, G59_ARG2_LENGTH);
 }
 
 G59CmdPacket::tG59Packet G59CmdPacket::GetPacket()
 {
     return m_packet;
+}
+
+void G59CmdPacket::DumpPacket()
+{
+    bool stop =false;
+    char buf[1024];
+    char *p = &buf[0];
+    for(int i=0; i< G59_PACKET_LEN; i++)
+    {
+        p += sprintf(p,"%02x ", m_packet[i]);
+    }
+    fprintf(stderr,"0x%s\n",&buf[0]);
 }
 
