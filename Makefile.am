@@ -9,9 +9,11 @@ libextio_genesis_la_SOURCES = \
 	genesis.cpp\
 	g59cmd.cpp\
 	g59cmdpacket.cpp\
-	main.cpp\
 	usbutil.cpp\
 	bsd_string.c\
 	si570.c
 
+noinst_PROGRAMS = test
+test_SOURCES = main.cpp
+test_LDADD = .libs/libextio_genesis.la
 

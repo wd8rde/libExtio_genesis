@@ -9,7 +9,8 @@
 
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 
-static const uint8_t si570_hs_div_values[] = { 11, 9, 7, 6, 5, 4 };
+//static const uint8_t si570_hs_div_values[] = { 11, 9, 7, 6, 5, 4 };
+static const uint8_t si570_hs_div_values[] = { 5 };
 
 /*
  * Set si570 frequency.
@@ -46,6 +47,11 @@ void si570_set_frequency( uint32_t frequency, uint8_t *regs )
 	}
 	if (best_fdco == ULLONG_MAX)
 		return;
+
+    fprintf(stderr,"%s:%d n1     = %lu\n", __FUNCTION__, __LINE__, rslt_n1);
+    fprintf(stderr,"%s:%d hs_div = %lu\n", __FUNCTION__, __LINE__, rslt_hs_div);
+    fprintf(stderr,"%s:%d fo     = %lu\n", __FUNCTION__, __LINE__, rslt_frequency);
+    fprintf(stderr,"%s:%d rfreq  = %lu\n", __FUNCTION__, __LINE__, rslt_rfreq);
 
     regs[0] = ((rslt_hs_div & 0x07) << 5) | (((rslt_n1-1) >> 2) & 0x1F);
     regs[1] = (((rslt_n1-1) & 0x03) << 6) | ((rslt_rfreq >> 32) & 0x3F);
