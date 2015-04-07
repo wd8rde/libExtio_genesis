@@ -68,7 +68,7 @@ G59Cmd::tG59Err G59Cmd::set_name(const char* name)
     return rtn;
 }
 
-G59Cmd::tG59Err G59Cmd::set_freq(const long freq)
+G59Cmd::tG59Err G59Cmd::private_set_freq(const long freq, const char* p_cmd)
 {
     G59Cmd::tG59Err rtn = FAILED_TO_SEND;
     if (NULL != mp_dev_handle)
@@ -80,7 +80,7 @@ G59Cmd::tG59Err G59Cmd::set_freq(const long freq)
         char arg2[G59_ARG2_LENGTH];
         memset(arg2, 0, G59_ARG2_LENGTH);
 
-        G59CmdPacket::tconstG59Cmd cmd = "SET_FREQ";
+        G59CmdPacket::tconstG59Cmd cmd = p_cmd;
 
         char freq_str[G59_ARG1_LENGTH+1];
         memset(freq_str, 0, G59_ARG1_LENGTH+1);
@@ -121,12 +121,77 @@ G59Cmd::tG59Err G59Cmd::set_freq(const long freq)
     return rtn;
 }
 
-G59Cmd::tG59Err G59Cmd::smooth(const long freq)
+G59Cmd::tG59Err G59Cmd::set_freq(const long freq)
 {
-    return OK;
+    return private_set_freq(freq, "SET_FREQ");
 }
 
-G59Cmd::tG59Err G59Cmd::set_filt(const int fltr)
+G59Cmd::tG59Err G59Cmd::smooth(const long freq)
+{
+    return private_set_freq(freq, "SMOOTH");
+}
+
+G59Cmd::tG59Err G59Cmd::private_send_on_off_cmd(const bool on_off, const char *p_on_cmd, const char *p_off_cmd)
+{
+    G59Cmd::tG59Err rtn = FAILED_TO_SEND;
+    if (NULL != mp_dev_handle)
+    {
+        G59CmdPacket::tconstG59Cmd cmd;
+        if (on_off)
+        {
+            cmd = p_on_cmd;
+        }
+        else
+        {
+            cmd = p_off_cmd;
+        }
+
+        G59CmdPacket packet(cmd);
+        packet.DumpPacket();
+        int nBytes = write_to_device(mp_dev_handle, m_out_endpoint, packet.GetPacket(), G59_PACKET_LEN);
+        if(G59_PACKET_LEN == nBytes)
+        {
+           rtn = OK;
+        }
+    }
+    else
+    {
+        LOG_ERR("%s:%d Error device is NULL\n",__FUNCTION__,__LINE__);
+    }
+
+    return rtn;
+}
+G59Cmd::tG59Err G59Cmd::af_amp(const bool on_off)
+{
+    return private_send_on_off_cmd(on_off, "AF_ON", "AF_OFF");
+}
+
+G59Cmd::tG59Err G59Cmd::rf_preamp(const bool on_off)
+{
+    return private_send_on_off_cmd(on_off, "RF_ON", "RF_OFF");
+}
+
+G59Cmd::tG59Err G59Cmd::att(const bool on_off)
+{
+    return private_send_on_off_cmd(on_off, "ATT_ON", "ATT_OFF");
+}
+
+G59Cmd::tG59Err G59Cmd::mute(const bool on_off)
+{
+    return private_send_on_off_cmd(on_off, "MUTE_ON", "MUTE_OFF");
+}
+
+G59Cmd::tG59Err G59Cmd::trv(const bool on_off)
+{
+    return private_send_on_off_cmd(on_off, "TRV_ON", "TRV_OFF");
+}
+
+G59Cmd::tG59Err G59Cmd::tx(const bool on_off)
+{
+    return private_send_on_off_cmd(on_off, "TX_ON", "TX_OFF");
+}
+
+G59Cmd::tG59Err G59Cmd::private_cmd_arg2only(const unsigned char arg, const char *p_cmd)
 {
     G59Cmd::tG59Err rtn = FAILED_TO_SEND;
     if (NULL != mp_dev_handle)
@@ -136,9 +201,9 @@ G59Cmd::tG59Err G59Cmd::set_filt(const int fltr)
         char arg2[G59_ARG2_LENGTH];
         memset(arg2, 0, G59_ARG1_LENGTH);
 
-        G59CmdPacket::tconstG59Cmd cmd = "SET_FILT";
+        G59CmdPacket::tconstG59Cmd cmd = p_cmd;
 
-        arg2[0x4] = (fltr & 0xff);
+        arg2[0x4] = arg;
 
         G59CmdPacket packet(cmd, arg1, arg2);
         packet.DumpPacket();
@@ -157,99 +222,53 @@ G59Cmd::tG59Err G59Cmd::set_filt(const int fltr)
     return rtn;
 }
 
-G59Cmd::tG59Err G59Cmd::af_amp(const bool on_off)
+G59Cmd::tG59Err G59Cmd::set_filt(const int fltr)
 {
-    return OK;
-}
-
-G59Cmd::tG59Err G59Cmd::rf_preamp(const bool on_off)
-{
-    return OK;
-}
-
-G59Cmd::tG59Err G59Cmd::att(const bool on_off)
-{
-    G59Cmd::tG59Err rtn = FAILED_TO_SEND;
-    if (NULL != mp_dev_handle)
-    {
-        G59CmdPacket::tconstG59Cmd cmd;
-        if (on_off)
-        {
-            cmd = "ATT_ON";
-        }
-        else
-        {
-            cmd = "ATT_OFF";
-        }
-
-        G59CmdPacket packet(cmd);
-        packet.DumpPacket();
-        int nBytes = write_to_device(mp_dev_handle, m_out_endpoint, packet.GetPacket(), G59_PACKET_LEN);
-        if(G59_PACKET_LEN == nBytes)
-        {
-           rtn = OK;
-        }
-    }
-    else
-    {
-        LOG_ERR("%s:%d Error device is NULL\n",__FUNCTION__,__LINE__);
-    }
-
-    return rtn;
-}
-
-G59Cmd::tG59Err G59Cmd::mute(const bool on_off)
-{
-    return OK;
-}
-
-G59Cmd::tG59Err G59Cmd::trv(const bool on_off)
-{
-    return OK;
-}
-
-G59Cmd::tG59Err G59Cmd::tx(const bool on_off)
-{
-    return OK;
-}
-
-G59Cmd::tG59Err G59Cmd::k_speed(const float wpm)
-{
-    return OK;
-}
-
-G59Cmd::tG59Err G59Cmd::k_mode(const int mode)
-{
-    return OK;
-}
-
-G59Cmd::tG59Err G59Cmd::k_ratio(const int ratio)
-{
-    return OK;
+    return private_cmd_arg2only((fltr & 0xff),"SET_FILT");
 }
 
 G59Cmd::tG59Err G59Cmd::pa10(const bool on_off)
 {
-    return OK;
+    return private_cmd_arg2only(((on_off?0x01:0x00) & 0xff),"PA10_ON");
 }
 
 G59Cmd::tG59Err G59Cmd::line_mic(const bool on_off)
 {
-    return OK;
+    return private_cmd_arg2only(((on_off?0x01:0x00) & 0xff),"LINE/MIC");
 }
 
-G59Cmd::tG59Err G59Cmd::auto_cor()
+G59Cmd::tG59Err G59Cmd::auto_cor(const bool on_off)
 {
-    return OK;
+    return private_cmd_arg2only(((on_off?0x01:0x00) & 0xff),"AUTO_COR");
 }
 
 G59Cmd::tG59Err G59Cmd::sec_rx2(const bool on_off)
 {
-    return OK;
+    return private_cmd_arg2only(((on_off?0x01:0x00) & 0xff),"SEC_RX2");
 }
 
-G59Cmd::tG59Err G59Cmd::monitor()
+G59Cmd::tG59Err G59Cmd::monitor(const bool on_off)
 {
-    return OK;
+    return private_cmd_arg2only(((on_off?0x01:0x00) & 0xff),"MONITOR");
+}
+
+G59Cmd::tG59Err G59Cmd::k_speed(const int wpm)
+{
+    if ((7 > wpm)||(128 < wpm))
+    {
+        return BAD_ARG;
+    }
+    unsigned char divisor = (unsigned char)((divisor/wpm) & 0xff);
+    return private_cmd_arg2only(divisor, "K_SPEED");
+}
+
+G59Cmd::tG59Err G59Cmd::k_mode(const int mode)
+{
+    return private_cmd_arg2only((unsigned char)(mode & 0xff), "K_MODE");
+}
+
+G59Cmd::tG59Err G59Cmd::k_ratio(const int ratio)
+{
+    return private_cmd_arg2only((unsigned char)(ratio & 0xff), "K_RATIO");
 }
 

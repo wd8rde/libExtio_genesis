@@ -10,7 +10,8 @@ public:
     typedef enum
     {
         OK,
-        FAILED_TO_SEND
+        FAILED_TO_SEND,
+        BAD_ARG
     } tG59Err;
 
 public:
@@ -28,15 +29,18 @@ public:
     tG59Err mute(const bool on_off);
     tG59Err trv(const bool on_off);
     tG59Err tx(const bool on_off);
-    tG59Err k_speed(const float wpm);
+    tG59Err k_speed(const int wpm);
     tG59Err k_mode(const int mode);
     tG59Err k_ratio(const int ratio);
     tG59Err pa10(const bool on_off);
     tG59Err line_mic(const bool on_off);
-    tG59Err auto_cor();
+    tG59Err auto_cor(const bool on_off);
     tG59Err sec_rx2(const bool on_off);
-    tG59Err monitor();
+    tG59Err monitor(const bool on_off);
 protected:
+    tG59Err private_set_freq(const long freq, const char* p_cmd);
+    tG59Err private_send_on_off_cmd(const bool on_off, const char *p_on_cmd, const char *p_off_cmd);
+    tG59Err private_cmd_arg2only(const unsigned char arg, const char *p_cmd);
     libusb_context* mp_ctx;
     unsigned char m_in_endpoint;
     unsigned char m_out_endpoint;
