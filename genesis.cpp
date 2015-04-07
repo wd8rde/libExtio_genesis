@@ -4,32 +4,8 @@
 /**************************************************************/
 /** Base Class Genesis
 /**************************************************************/
-Genesis::Genesis(int productid)
-    :m_vendorid(0xfffe)
-    ,m_productid(productid)
-    ,m_initialized(false)
-{
-}
 
-Genesis::~Genesis()
-{
-}
-
-std::string Genesis::GetMake()
-{ 
-    return std::string("Genesis SDR"); 
-}
-
-int Genesis::GetVendorId()
-{
-    return m_vendorid;
-}
-
-/**************************************************************/
-/** Class G59                                                 */
-/**************************************************************/
-
-const Genesis::BandFilters_t G59::ms_bandfilters(
+const Genesis::BandFilters_t Genesis::ms_bandfilters(
 {
     { 
         .index = 1,
@@ -82,6 +58,72 @@ const Genesis::BandFilters_t G59::ms_bandfilters(
     }
 });
 
+Genesis::Genesis(int productid)
+    :m_vendorid(0xfffe)
+    ,m_productid(productid)
+    ,m_initialized(false)
+{
+}
+
+Genesis::~Genesis()
+{
+}
+
+std::string Genesis::GetMake()
+{ 
+    return std::string("Genesis SDR"); 
+}
+
+int Genesis::GetVendorId()
+{
+    return m_vendorid;
+}
+
+bool Genesis::Init()
+{
+    if (!m_initialized)
+    {
+        m_initialized = m_g59cmd.Init(m_vendorid, m_productid);
+    }
+
+    return m_initialized;
+}
+
+bool Genesis::Close()
+{
+    if (m_initialized)
+    {
+        m_initialized = !m_g59cmd.Close();
+    }
+
+    return m_initialized;
+}
+
+bool Genesis::SetLO(long freq)
+{
+    int band_filter = FindBand(freq);
+    m_g59cmd.set_filt(band_filter);
+    m_g59cmd.set_freq(freq);
+}
+
+int Genesis::FindBand(long freq)
+{
+    int index = 0;
+    for(BandFilters_t::const_iterator it = ms_bandfilters.begin(); it != ms_bandfilters.end(); it++ )
+    {
+        if((it->low_freq <= freq) && (it->high_freq >= freq))
+        {
+            index = it->index;
+            fprintf(stderr, "%s:%d Found Band: %d\n",__FUNCTION__,__LINE__,index);
+            break;
+        }
+    }
+    return index;
+}
+
+/**************************************************************/
+/** Class G59                                                 */
+/**************************************************************/
 G59::G59() 
     : Genesis(0x1970)
 {
@@ -101,45 +143,25 @@ std::string G59::GetModel()
     return std::string("G59");
 }
 
-bool G59::Init()
+/**************************************************************/
+/** Class G11                                                 */
+/**************************************************************/
+G11::G11() 
+    : Genesis(0x1971)
 {
-    if (!m_initialized)
-    {
-        m_initialized = m_g59cmd.Init(m_vendorid, m_productid);
-    }
+};
 
-    return m_initialized;
-}
-
-bool G59::Close()
+G11::~G11()
 {
-    if (m_initialized)
-    {
-        m_initialized = !m_g59cmd.Close();
-    }
+};
 
-    return m_initialized;
-}
-
-bool G59::SetLO(long freq)
+int G11::GetProductId()
 {
-    int band_filter = FindBand(freq);
-    m_g59cmd.set_filt(band_filter);
-    m_g59cmd.set_freq(freq);
-}
+    return m_productid;
+};
 
-int G59::FindBand(long freq)
+std::string G11::GetModel()
 {
-    int index = 0;
-    for(BandFilters_t::const_iterator it = ms_bandfilters.begin(); it != ms_bandfilters.end(); it++ )
-    {
-        if((it->low_freq <= freq) && (it->high_freq >= freq))
-        {
-            index = it->index;
-            fprintf(stderr, "%s:%d Found Band: %d\n",__FUNCTION__,__LINE__,index);
-            break;
-        }
-    }
-    return index;
+    return std::string("G11");
 }
 

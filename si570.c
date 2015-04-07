@@ -5,12 +5,17 @@
 
 #define FDCO_MIN		4850000000LL
 #define FDCO_MAX		5670000000LL
+#define HS_DIV_SHIFT		5
+#define HS_DIV_MASK		0xe0
+#define HS_DIV_OFFSET		4
+#define N1_6_2_MASK		0x1f
+#define N1_1_0_MASK		0xc0
+#define RFREQ_37_32_MASK	0x3f
 #define SI570_XTAL_FREQ 114285000
 
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 
-//static const uint8_t si570_hs_div_values[] = { 11, 9, 7, 6, 5, 4 };
-static const uint8_t si570_hs_div_values[] = { 5 };
+static const uint8_t si570_hs_div_values[] = { 11, 9, 7, 6, 5, 4 };
 
 /*
  * Set si570 frequency.
@@ -48,17 +53,12 @@ void si570_set_frequency( uint32_t frequency, uint8_t *regs )
 	if (best_fdco == ULLONG_MAX)
 		return;
 
-    fprintf(stderr,"%s:%d n1     = %lu\n", __FUNCTION__, __LINE__, rslt_n1);
-    fprintf(stderr,"%s:%d hs_div = %lu\n", __FUNCTION__, __LINE__, rslt_hs_div);
-    fprintf(stderr,"%s:%d fo     = %lu\n", __FUNCTION__, __LINE__, rslt_frequency);
-    fprintf(stderr,"%s:%d rfreq  = %lu\n", __FUNCTION__, __LINE__, rslt_rfreq);
-
-    regs[0] = ((rslt_hs_div & 0x07) << 5) | (((rslt_n1-1) >> 2) & 0x1F);
-    regs[1] = (((rslt_n1-1) & 0x03) << 6) | ((rslt_rfreq >> 32) & 0x3F);
-    regs[2] = ((rslt_rfreq >> 24) & 0xFF);
-    regs[3] = ((rslt_rfreq >> 16) & 0xFF);
-    regs[4] = ((rslt_rfreq >> 8) & 0xFF);
-    regs[5] = (rslt_rfreq & 0xFF);
+	regs[0] = (((rslt_hs_div - HS_DIV_OFFSET) << HS_DIV_SHIFT) | (((rslt_n1 - 1) >> 2) & N1_6_2_MASK));
+	regs[1] = (((rslt_n1 - 1) << 6) | ((rslt_rfreq >> 32) & RFREQ_37_32_MASK));
+	regs[2] = ((rslt_rfreq >> 24) & 0xff);
+	regs[3] = ((rslt_rfreq >> 16) & 0xff);
+	regs[4] = ((rslt_rfreq >> 8) & 0xff);
+	regs[5] = (rslt_rfreq & 0xff);
     return;
 }
 

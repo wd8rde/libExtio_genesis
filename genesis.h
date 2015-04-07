@@ -23,12 +23,16 @@ public:
     int GetVendorId();
     virtual std::string GetModel() = 0;
     virtual int GetProductId() = 0;
-    virtual bool Init() = 0;
-    virtual bool Close() = 0;
-    virtual bool SetLO(long freq) = 0;
+    virtual bool Init();
+    virtual bool Close();
+    virtual bool SetLO(long freq);
+    int FindBand(long freq);
     int m_vendorid;
     int m_productid;
     bool m_initialized;
+    G59Cmd m_g59cmd;
+    static const BandFilters_t ms_bandfilters;
+
 };
 
 class G59: public Genesis
@@ -38,13 +42,14 @@ public:
     virtual ~G59();
     virtual int GetProductId();
     virtual std::string GetModel();
-    virtual bool Init();
-    virtual bool Close();
-    virtual bool SetLO(long freq);
-protected:
-    G59Cmd m_g59cmd;
-    static const BandFilters_t ms_bandfilters;
+};
 
-    int FindBand(long freq);
+class G11: public Genesis
+{
+public:
+    G11();
+    virtual ~G11();
+    virtual int GetProductId();
+    virtual std::string GetModel();
 };
 #endif /*GENESIS_SDR_H_*/
