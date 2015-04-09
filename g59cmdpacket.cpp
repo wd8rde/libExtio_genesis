@@ -66,16 +66,20 @@ G59CmdPacket::tG59Packet G59CmdPacket::GetPacket()
 {
     return m_packet;
 }
-
+#include <ctype.h>
 void G59CmdPacket::DumpPacket()
 {
     bool stop =false;
     char buf[1024];
+    char buf2[1024];
     char *p = &buf[0];
+    char *q = &buf2[0];
     for(int i=0; i< G59_PACKET_LEN; i++)
     {
         p += sprintf(p,"%02x ", m_packet[i]);
+        q += sprintf(q,"% c ", isprint?m_packet[i]:'.');
     }
     fprintf(stderr,"0x%s\n",&buf[0]);
+    fprintf(stderr,"  %s\n",&buf2[0]);
 }
 

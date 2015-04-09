@@ -62,6 +62,9 @@ Genesis::Genesis(int productid)
     :m_vendorid(0xfffe)
     ,m_productid(productid)
     ,m_initialized(false)
+    ,m_hasMicPreamp(true)
+    ,m_hasGPA10(true)
+
 {
 }
 
@@ -119,6 +122,39 @@ int Genesis::FindBand(long freq)
         }
     }
     return index;
+}
+
+bool Genesis::SetTx(bool tx_enable)
+{
+    if (tx_enable)
+    {
+        //enable the Line/Mic Preamp if it is available
+        if (m_hasMicPreamp)
+        {
+            m_g59cmd.line_mic(true);
+        }
+
+        //enable the GPA10 if it is available
+        if(m_hasGPA10)
+        {
+            m_g59cmd.pa10(true);
+        }
+
+        //Start Transmitting
+        m_g59cmd.tx(true);
+        //Todo, there should be a tx time limit timer
+    }
+    else
+    {
+        //Stop Transmitting
+        m_g59cmd.tx(false);
+        //disable the GPA10
+        m_g59cmd.pa10(false);
+        //disable the Line/Mic Preamp
+        m_g59cmd.line_mic(false);
+    }
+
+    return true;
 }
 
 /**************************************************************/

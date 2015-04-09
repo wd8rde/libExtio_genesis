@@ -27,11 +27,14 @@ public:
     virtual bool Close();
     virtual bool SetLO(long freq);
     int FindBand(long freq);
+    bool SetTx(bool tx_enable);
     int m_vendorid;
     int m_productid;
     bool m_initialized;
     G59Cmd m_g59cmd;
     static const BandFilters_t ms_bandfilters;
+    bool m_hasMicPreamp;
+    bool m_hasGPA10;
 
 };
 

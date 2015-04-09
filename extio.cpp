@@ -11,8 +11,10 @@ static G59 m_g59;
 static G11 m_g11;
 static Genesis *mp_genesis = NULL;
 
-char m_name_str[256];
-char m_model_str[256];
+static char m_name_str[256];
+static char m_model_str[256];
+static char m_mode = '\0';
+static long m_tune_freq = 0;
 
 extern "C"
 {
@@ -91,6 +93,7 @@ long GetHWLO()
 void TuneChanged(long freq)
 {
     fprintf(stderr,"%s:%d freq: %ld\n",__FUNCTION__,__LINE__, freq);
+    m_tune_freq = freq;
 }
 void IFLimitsChanged(long low, long high)
 {
@@ -104,15 +107,16 @@ void IFLimitsChanged(long low, long high)
 long GetTune()
 {
     fprintf(stderr,"%s:%d\n",__FUNCTION__,__LINE__);
-    return 0;
+    return m_tune_freq;
 }
 char GetMode()
 {
     fprintf(stderr,"%s:%d\n",__FUNCTION__,__LINE__);
-    return 0;
+    return m_mode;
 }
 void ModeChanged(char mode)
 {
+    m_mode = mode;
     fprintf(stderr,"%s:%d %c\n",__FUNCTION__,__LINE__,mode);
 }
 long GetHWSR()
@@ -136,6 +140,7 @@ void GetFilters(int& loCut, int& hiCut, int& pitch)
 int SetModeRxTx(int modeRxTx)
 {
     fprintf(stderr,"%s:%d modeRxTx: %d\n",__FUNCTION__,__LINE__, modeRxTx);
+    mp_genesis->SetTx((0!=modeRxTx?true:false));
     return 0;
 }
 int ActivateTx(int magicA, int magicB)

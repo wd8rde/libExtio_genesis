@@ -199,7 +199,7 @@ G59Cmd::tG59Err G59Cmd::private_cmd_arg2only(const unsigned char arg, const char
         char arg1[G59_ARG1_LENGTH];
         memset(arg1, 0, G59_ARG1_LENGTH);
         char arg2[G59_ARG2_LENGTH];
-        memset(arg2, 0, G59_ARG1_LENGTH);
+        memset(arg2, 0, G59_ARG2_LENGTH);
 
         G59CmdPacket::tconstG59Cmd cmd = p_cmd;
 
