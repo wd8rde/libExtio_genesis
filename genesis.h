@@ -35,6 +35,8 @@ public:
     static const BandFilters_t ms_bandfilters;
     bool m_hasMicPreamp;
     bool m_hasGPA10;
+    int m_current_filter;
+    long m_current_freq;
 
 };
 

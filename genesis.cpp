@@ -5,6 +5,7 @@
 /** Base Class Genesis
 /**************************************************************/
 
+#define SMOOTH_RANGE 3500 //Smooth tuning range for si570 in ppm
 const Genesis::BandFilters_t Genesis::ms_bandfilters(
 {
     { 
@@ -64,6 +65,9 @@ Genesis::Genesis(int productid)
     ,m_initialized(false)
     ,m_hasMicPreamp(true)
     ,m_hasGPA10(true)
+    ,m_current_filter(0)
+    ,m_current_freq(0)
+
 
 {
 }
@@ -89,6 +93,11 @@ bool Genesis::Init()
         m_initialized = m_g59cmd.Init(m_vendorid, m_productid);
     }
 
+    //enable the GPA10 if it is available
+    if(m_hasGPA10)
+    {
+        m_g59cmd.pa10(true);
+    }
     return m_initialized;
 }
 
@@ -105,8 +114,20 @@ bool Genesis::Close()
 bool Genesis::SetLO(long freq)
 {
     int band_filter = FindBand(freq);
+    //enable the GPA10 if it is available
+    m_g59cmd.pa10(m_hasGPA10);
     m_g59cmd.set_filt(band_filter);
-    m_g59cmd.set_freq(freq);
+
+    long smooth_amount = (m_current_freq * SMOOTH_RANGE)/1000000;
+    if(smooth_amount >= (abs(freq - m_current_freq)))
+    {
+        m_g59cmd.smooth(freq);
+    }
+    else
+    {
+        m_g59cmd.set_freq(freq);
+        m_current_freq = freq;
+    }
 }
 
 int Genesis::FindBand(long freq)
@@ -128,16 +149,10 @@ bool Genesis::SetTx(bool tx_enable)
 {
     if (tx_enable)
     {
-        //enable the Line/Mic Preamp if it is available
+        //enable the Mic Preamp if it is available
         if (m_hasMicPreamp)
         {
             m_g59cmd.line_mic(true);
-        }
-
-        //enable the GPA10 if it is available
-        if(m_hasGPA10)
-        {
-            m_g59cmd.pa10(true);
         }
 
         //Start Transmitting
@@ -148,9 +163,7 @@ bool Genesis::SetTx(bool tx_enable)
     {
         //Stop Transmitting
         m_g59cmd.tx(false);
-        //disable the GPA10
-        m_g59cmd.pa10(false);
-        //disable the Line/Mic Preamp
+        //disable the Mic Preamp
         m_g59cmd.line_mic(false);
     }
 
