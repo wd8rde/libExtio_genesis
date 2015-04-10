@@ -186,11 +186,6 @@ G59Cmd::tG59Err G59Cmd::trv(const bool on_off)
     return private_send_on_off_cmd(on_off, "TRV_ON", "TRV_OFF");
 }
 
-G59Cmd::tG59Err G59Cmd::tx(const bool on_off)
-{
-    return private_send_on_off_cmd(on_off, "TX_ON", "TX_OFF");
-}
-
 G59Cmd::tG59Err G59Cmd::private_cmd_arg2only(const unsigned char arg, const char *p_cmd)
 {
     G59Cmd::tG59Err rtn = FAILED_TO_SEND;
@@ -202,8 +197,7 @@ G59Cmd::tG59Err G59Cmd::private_cmd_arg2only(const unsigned char arg, const char
         memset(arg2, 0, G59_ARG2_LENGTH);
 
         G59CmdPacket::tconstG59Cmd cmd = p_cmd;
-
-        arg2[0x4] = arg;
+        arg2[0x04] = arg;
 
         G59CmdPacket packet(cmd, arg1, arg2);
         packet.DumpPacket();
@@ -225,6 +219,20 @@ G59Cmd::tG59Err G59Cmd::private_cmd_arg2only(const unsigned char arg, const char
 G59Cmd::tG59Err G59Cmd::set_filt(const int fltr)
 {
     return private_cmd_arg2only((fltr & 0xff),"SET_FILT");
+}
+
+G59Cmd::tG59Err G59Cmd::tx(const bool on_off)
+{
+    tG59Err rtn = OK;
+    if (on_off)
+    {
+        rtn = private_cmd_arg2only(0x03,"TX_ON");
+    }
+    else
+    {
+        rtn = private_cmd_arg2only(0x00,"TX_OFF");
+    }
+    return rtn;
 }
 
 G59Cmd::tG59Err G59Cmd::pa10(const bool on_off)

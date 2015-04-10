@@ -25,7 +25,7 @@ const Genesis::BandFilters_t Genesis::ms_bandfilters(
         .index = 3,
         .band_str = "60-40m",
         .low_freq = 5403500,
-        .high_freq = 7000000
+        .high_freq = 7300000
     },
     { 
         .index = 4,
@@ -94,10 +94,8 @@ bool Genesis::Init()
     }
 
     //enable the GPA10 if it is available
-    if(m_hasGPA10)
-    {
-        m_g59cmd.pa10(true);
-    }
+    m_g59cmd.pa10(m_hasGPA10);
+
     return m_initialized;
 }
 
@@ -114,9 +112,12 @@ bool Genesis::Close()
 bool Genesis::SetLO(long freq)
 {
     int band_filter = FindBand(freq);
-    //enable the GPA10 if it is available
-    m_g59cmd.pa10(m_hasGPA10);
-    m_g59cmd.set_filt(band_filter);
+
+    if(m_current_filter != band_filter )
+    {
+        m_g59cmd.set_filt(band_filter);
+        m_current_filter = band_filter;
+    }
 
     long smooth_amount = (m_current_freq * SMOOTH_RANGE)/1000000;
     if(smooth_amount >= (abs(freq - m_current_freq)))
@@ -138,7 +139,7 @@ int Genesis::FindBand(long freq)
         if((it->low_freq <= freq) && (it->high_freq >= freq))
         {
             index = it->index;
-            fprintf(stderr, "%s:%d Found Band: %d\n",__FUNCTION__,__LINE__,index);
+            fprintf(stderr, "%s:%d Found Band: Found %d, freq %ld, low %ld, high %d\n",__FUNCTION__,__LINE__,index, freq, it->low_freq, it->high_freq);
             break;
         }
     }
