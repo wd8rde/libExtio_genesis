@@ -14,10 +14,14 @@ static Genesis *mp_genesis = NULL;
 static char m_name_str[256];
 static char m_model_str[256];
 static char m_mode = '\0';
-static long m_tune_freq = 0;
+static long m_tune_freq = 1800000;
+static long m_lo_freq = 1800000;
 
 extern "C"
 {
+//Foward Decl
+int SetHWLO(long LOfreq);
+
 void ShowGUI()
 {
     fprintf(stderr,"%s:%d\n",__FUNCTION__,__LINE__);
@@ -53,6 +57,7 @@ bool InitHW(char *name, char *model, int& type)
 bool OpenHW()
 {
     fprintf(stderr,"%s:%d\n",__FUNCTION__,__LINE__);
+    SetHWLO(m_lo_freq);
     return true;
 }
 void CloseHW()
@@ -73,6 +78,7 @@ int SetHWLO(long LOfreq)
 {
     fprintf(stderr,"%s:%d LOfreq: %ld\n",__FUNCTION__,__LINE__, LOfreq);
     mp_genesis->SetLO(LOfreq);
+    m_lo_freq = LOfreq;
     return 0;
 }
 int GetStatus()
@@ -88,7 +94,7 @@ void SetCallback(void (* Callback)(int, int, float, void *))
 long GetHWLO()
 {
     fprintf(stderr,"%s:%d\n",__FUNCTION__,__LINE__);
-    return 0;
+    return m_lo_freq;
 }
 void TuneChanged(long freq)
 {
@@ -97,12 +103,14 @@ void TuneChanged(long freq)
 }
 void IFLimitsChanged(long low, long high)
 {
-    fprintf(stderr,"%s:%d low: %ld, high: %ld\n",__FUNCTION__,__LINE__,low, high);
-    long center = (low + high) / 2;
-    if(200000 < center)
+    long LOfreq = (low + high)/2;
+    fprintf(stderr,"%s:%d low: %ld, high: %ld, LO = %ld\n",__FUNCTION__,__LINE__, low, high, LOfreq);
+    if((0 < LOfreq) && (LOfreq != m_lo_freq))
     {
-        mp_genesis->SetLO(center);
+        mp_genesis->SetLO(LOfreq);
+        m_lo_freq = LOfreq;
     }
+
 }
 long GetTune()
 {
