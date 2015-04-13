@@ -1,6 +1,10 @@
-#include "genesis.h"
 #include <string>
+#include <iostream>
+#include <fstream>
+
+#include "genesis.h"
 #include "g59cmd.h"
+#include "simpleini-master/SimpleIni.h"
 /**************************************************************/
 /** Base Class Genesis
 /**************************************************************/
@@ -59,6 +63,8 @@ const Genesis::BandFilters_t Genesis::ms_bandfilters(
     }
 });
 
+static const char* INIFILENAME = ".genesis-sdr.ini";
+
 Genesis::Genesis(int productid)
     :m_vendorid(0xfffe)
     ,m_productid(productid)
@@ -93,6 +99,12 @@ bool Genesis::Init()
         m_initialized = m_g59cmd.Init(m_vendorid, m_productid);
     }
 
+    LoadConfigFile();
+    bool hasmultiple = false;
+    m_hasGPA10 = m_ini.GetBoolValue("g59","hasGPA10", true, &hasmultiple);
+    m_hasMicPreamp = m_ini.GetBoolValue("g59","hasMicPreamp", true, &hasmultiple);
+    fprintf(stderr,"%s:%d m_hasGPA10=%d, m_hasMicPreamp=%d\n",__FUNCTION__,__LINE__,m_hasGPA10,m_hasMicPreamp);
+
     //enable the GPA10 if it is available
     m_g59cmd.pa10(m_hasGPA10);
 
@@ -111,14 +123,6 @@ bool Genesis::Close()
 
 bool Genesis::SetLO(long freq)
 {
-    int band_filter = FindBand(freq);
-
-    if(m_current_filter != band_filter )
-    {
-        m_g59cmd.set_filt(band_filter);
-        m_current_filter = band_filter;
-    }
-
     long smooth_amount = (m_current_freq * SMOOTH_RANGE)/1000000;
     if(smooth_amount >= (abs(freq - m_current_freq)))
     {
@@ -131,6 +135,17 @@ bool Genesis::SetLO(long freq)
     }
 }
 
+bool Genesis::SetBand(long freq)
+{
+    int band_filter = FindBand(freq);
+
+    if(m_current_filter != band_filter )
+    {
+        m_g59cmd.set_filt(band_filter);
+        m_current_filter = band_filter;
+    }
+}
+
 int Genesis::FindBand(long freq)
 {
     int index = 0;
@@ -139,7 +154,7 @@ int Genesis::FindBand(long freq)
         if((it->low_freq <= freq) && (it->high_freq >= freq))
         {
             index = it->index;
-            fprintf(stderr, "%s:%d Found Band: Found %d, freq %ld, low %ld, high %d\n",__FUNCTION__,__LINE__,index, freq, it->low_freq, it->high_freq);
+            fprintf(stderr, "%s:%d Found Band: Found %d, freq %ld, low %ld, high %ld\n",__FUNCTION__,__LINE__,index, freq, it->low_freq, it->high_freq);
             break;
         }
     }
@@ -169,6 +184,72 @@ bool Genesis::SetTx(bool tx_enable)
     }
 
     return true;
+}
+void Genesis::SetAtten(bool on)
+{
+    m_g59cmd.att(on);
+}
+void Genesis::SetRFPreamp(bool on)
+{
+    m_g59cmd.rf_preamp(on);
+}
+
+bool Genesis::LoadConfigFile()
+{
+    bool rtn = false;
+    m_ini.SetUnicode(true);
+    m_ini.SetMultiKey(true);
+    m_ini.SetMultiLine(true);
+
+    // load the file
+    std::string homepath = getenv("HOME");
+    std::string inifilepath((homepath + "/" + INIFILENAME).c_str());
+    std::ifstream instream;
+    instream.open(inifilepath.c_str(), std::ifstream::in | std::ifstream::binary);
+    if (instream.is_open())
+    {
+        if (m_ini.LoadData(instream) < 0)
+        {
+            fprintf(stderr,"%s:%d Failed to load config information from %s\n",__FUNCTION__,__LINE__,inifilepath.c_str());
+            return false;
+        }
+        rtn = true;
+        instream.close();
+    }
+    else
+    {
+        fprintf(stderr,"%s:%d Failed to open %s for reading\n",__FUNCTION__,__LINE__,inifilepath.c_str());
+    }
+    return rtn;
+}
+
+bool Genesis::SaveConfigFile()
+{
+    bool rtn = false;
+    m_ini.SetUnicode(true);
+    m_ini.SetMultiKey(true);
+    m_ini.SetMultiLine(true);
+
+    // load the file
+    std::string homepath = getenv("HOME");
+    std::string inifilepath((homepath + "/" + INIFILENAME).c_str());
+    std::ofstream outstream;
+    outstream.open(inifilepath.c_str(), std::ifstream::out | std::ifstream::binary  | std::ifstream::trunc);
+    if (outstream.is_open())
+    {
+        if (m_ini.Save(outstream) < 0)
+        {
+            fprintf(stderr,"%s:%d Failed to save config information from %s\n",__FUNCTION__,__LINE__,inifilepath.c_str());
+            return false;
+        }
+        rtn = true;
+        outstream.close();
+    }
+    else
+    {
+        fprintf(stderr,"%s:%d Failed to open %s for writing\n",__FUNCTION__,__LINE__,inifilepath.c_str());
+    }
+    return rtn;
 }
 
 /**************************************************************/

@@ -11,7 +11,8 @@ libextio_genesis_la_SOURCES = \
 	g59cmdpacket.cpp\
 	usbutil.cpp\
 	bsd_string.c\
-	si570.c
+	si570.c\
+	simpleini-master/ConvertUTF.c
 
 noinst_PROGRAMS = test
 test_SOURCES = main.cpp

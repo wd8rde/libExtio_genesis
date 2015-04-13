@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include "g59cmd.h"
+#include "simpleini-master/SimpleIni.h"
 
 class Genesis
 {
@@ -26,8 +27,13 @@ public:
     virtual bool Init();
     virtual bool Close();
     virtual bool SetLO(long freq);
+    virtual bool SetBand(long freq);
     int FindBand(long freq);
     bool SetTx(bool tx_enable);
+    void SetAtten(bool on);
+    void SetRFPreamp(bool on);
+    bool LoadConfigFile();
+    bool SaveConfigFile();
     int m_vendorid;
     int m_productid;
     bool m_initialized;
@@ -37,6 +43,8 @@ public:
     bool m_hasGPA10;
     int m_current_filter;
     long m_current_freq;
+    CSimpleIniA m_ini;
+
 
 };
 
