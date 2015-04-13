@@ -161,7 +161,7 @@ void VersionInfo(const char *name, int ver_major, int ver_minor)
 {
     fprintf(stderr,"%s:%d name:\"%s\", ver_major:%d, ver_minor:%d\n",__FUNCTION__,__LINE__, name, ver_major, ver_minor);
 }
-void SetAtten(int db)
+void SetPreamp(int db)
 {
     fprintf(stderr,"%s:%d db=%d\n",__FUNCTION__,__LINE__, db);
     if (0 > db)

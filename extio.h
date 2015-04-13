@@ -28,6 +28,6 @@ void GetFilters(int& loCut, int& hiCut, int& pitch);
 int SetModeRxTx(int modeRxTx);
 int ActivateTx(int magicA, int magicB);
 void VersionInfo(const char *name, int ver_major, int ver_minor);
-void SetAtten(int db);
+void SetPreamp(int db);
 } /* extern "C" */
 #endif /*  EXTIO_H_ */
