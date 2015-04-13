@@ -13,53 +13,53 @@
 const Genesis::BandFilters_t Genesis::ms_bandfilters(
 {
     { 
-        .index = 1,
-        .band_str = "160m",
-        .low_freq = 1800000,
-        .high_freq = 2000000
+        1,
+        "160m",
+        1800000,
+        2000000
     },
 
     { 
-        .index = 2,
-        .band_str = "80m",
-        .low_freq = 3500000,
-        .high_freq = 4000000
+        2,
+        "80m",
+        3500000,
+        4000000
     },
     { 
-        .index = 3,
-        .band_str = "60-40m",
-        .low_freq = 5403500,
-        .high_freq = 7300000
+        3,
+        "60-40m",
+        5403500,
+        7300000
     },
     { 
-        .index = 4,
-        .band_str = "30-20m",
-        .low_freq = 10100000,
-        .high_freq = 14350000
+        4,
+        "30-20m",
+        10100000,
+        14350000
     },
     { 
-        .index = 5,
-        .band_str = "17-15m",
-        .low_freq = 18068000,
-        .high_freq = 21450000
+        5,
+        "17-15m",
+        18068000,
+        21450000
     },
     { 
-        .index = 6,
-        .band_str = "12-10m",
-        .low_freq = 24890000,
-        .high_freq = 29700000
+        6,
+        "12-10m",
+        24890000,
+        29700000
     },
     { 
-        .index = 7,
-        .band_str = "6m",
-        .low_freq = 50000000,
-        .high_freq = 54000000
+        7,
+        "6m",
+        50000000,
+        54000000
     },
     { 
-        .index = 0,
-        .band_str = "gen",
-        .low_freq = 0,
-        .high_freq = 1024000000
+        0,
+        "gen",
+        0,
+        1024000000
     }
 });
 

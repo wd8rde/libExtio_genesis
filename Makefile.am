@@ -1,6 +1,6 @@
 
 lib_LTLIBRARIES = libextio_genesis.la
-libextio_genesis_la_CPPFLAGS = $(USB_CFLAGS) -std=gnu++11
+libextio_genesis_la_CPPFLAGS = $(USB_CFLAGS) -std=gnu++0x
 libextio_genesis_la_CDFLAGS = $(USB_LIBS)
 
 libextio_genesis_la_SOURCES = \
