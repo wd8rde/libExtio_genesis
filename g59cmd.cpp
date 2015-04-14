@@ -6,6 +6,7 @@
 
 #define LOG_ERR(...) {fprintf(stderr,__VA_ARGS__);}
 #define LOG_INFO(...) {fprintf(stderr,__VA_ARGS__);}
+//#define SIMULATE_USB_CONNECTION
 
 G59Cmd::G59Cmd()
     : mp_ctx(NULL)
@@ -22,6 +23,9 @@ G59Cmd::~G59Cmd()
 
 bool G59Cmd::Init(int vendor_id, int product_id)
 {
+    #ifdef SIMULATE_USB_CONNECTION
+    return true;
+    #endif
     bool rtn = false;
     libusb_init(&mp_ctx);
     mp_dev_handle = open_device(mp_ctx, vendor_id, product_id, &m_in_endpoint, &m_out_endpoint, &m_interface);
@@ -40,6 +44,10 @@ bool G59Cmd::Init(int vendor_id, int product_id)
 
 bool G59Cmd::Close()
 {
+    #ifdef SIMULATE_USB_CONNECTION
+    return true;
+    #endif
+
     int rslt = close_device(mp_dev_handle, m_interface);
     return (0 == rslt);
 }
@@ -54,6 +62,9 @@ G59Cmd::tG59Err G59Cmd::set_name(const char* name)
 
         G59CmdPacket packet(cmd, arg1);
         packet.DumpPacket();
+        #ifdef SIMULATE_USB_CONNECTION
+        return OK;
+        #endif
         int nBytes = write_to_device(mp_dev_handle, m_out_endpoint, packet.GetPacket(), G59_PACKET_LEN);
         if(G59_PACKET_LEN == nBytes)
         {
@@ -107,6 +118,9 @@ G59Cmd::tG59Err G59Cmd::private_set_freq(const long freq, const char* p_cmd)
 
         G59CmdPacket packet(cmd, arg1, arg2);
         packet.DumpPacket();
+        #ifdef SIMULATE_USB_CONNECTION
+        return OK;
+        #endif
         int nBytes = write_to_device(mp_dev_handle, m_out_endpoint, packet.GetPacket(), G59_PACKET_LEN);
         if(G59_PACKET_LEN == nBytes)
         {
@@ -148,6 +162,9 @@ G59Cmd::tG59Err G59Cmd::private_send_on_off_cmd(const bool on_off, const char *p
 
         G59CmdPacket packet(cmd);
         packet.DumpPacket();
+        #ifdef SIMULATE_USB_CONNECTION
+        return OK;
+        #endif
         int nBytes = write_to_device(mp_dev_handle, m_out_endpoint, packet.GetPacket(), G59_PACKET_LEN);
         if(G59_PACKET_LEN == nBytes)
         {
@@ -202,6 +219,9 @@ G59Cmd::tG59Err G59Cmd::private_cmd_arg2only(const unsigned char arg, const char
         G59CmdPacket packet(cmd, arg1, arg2);
         packet.DumpPacket();
 
+        #ifdef SIMULATE_USB_CONNECTION
+        return OK;
+        #endif
         int nBytes = write_to_device(mp_dev_handle, m_out_endpoint, packet.GetPacket(), G59_PACKET_LEN);
         if(G59_PACKET_LEN == nBytes)
         {
