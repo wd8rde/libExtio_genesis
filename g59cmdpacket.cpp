@@ -11,15 +11,30 @@
 #define G59_ARG2_LENGTH 48
 #define G59_PACKET_LEN 64
 #endif
+#define LOG_ERR(...) {fprintf(stderr,__VA_ARGS__);}
+#define LOG_INFO(...) //{fprintf(stderr,__VA_ARGS__);}
 G59CmdPacket::G59CmdPacket()
 {
     memset( (m_packet), 0, G59_PACKET_LEN);
+}
+
+G59CmdPacket::G59CmdPacket(tG59Packet packet)
+{
+    SetPacket(packet);
 }
 
 G59CmdPacket::G59CmdPacket(tconstG59Cmd cmd, tconstG59Arg1 arg1, tconstG59Arg2 arg2)
 {
     memset( (m_packet), 0, G59_PACKET_LEN);
     SetPacket(cmd,arg1,arg2);
+}
+
+void G59CmdPacket::SetPacket(tG59Packet packet)
+{
+    if (NULL != packet)
+    {
+        memcpy(m_packet, packet, G59_PACKET_LEN);
+    }
 }
 
 void G59CmdPacket::SetPacket(tconstG59Cmd cmd, tconstG59Arg1 arg1, tconstG59Arg2 arg2)
@@ -80,10 +95,10 @@ void G59CmdPacket::DumpPacket()
     {
         a += sprintf(a,"%02x ", i);
         p += sprintf(p,"%02x ", m_packet[i]);
-        q += sprintf(q,"% c ", isprint?m_packet[i]:'.');
+        q += sprintf(q,"%c ", isprint?m_packet[i]:'.');
     }
-    fprintf(stderr,"0x%s\n",&addr[0]);
-    fprintf(stderr,"0x%s\n",&buf[0]);
-    fprintf(stderr,"  %s\n",&buf2[0]);
+    LOG_INFO("0x%s\n",&addr[0]);
+    LOG_INFO("0x%s\n",&buf[0]);
+    LOG_INFO("  %s\n",&buf2[0]);
 }
 

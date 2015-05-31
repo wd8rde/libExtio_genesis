@@ -6,6 +6,8 @@
 #include "genesis.h"
 #include "g59cmd.h"
 
+#define LOG_ERR(...) {fprintf(stderr,__VA_ARGS__);}
+#define LOG_INFO(...) {fprintf(stderr,__VA_ARGS__);}
 
 static G59 m_g59;
 static G11 m_g11;
@@ -21,10 +23,11 @@ extern "C"
 {
 //Foward Decl
 int SetHWLO(long LOfreq);
+void TuneChanged(long freq);
 
 void ShowGUI()
 {
-    fprintf(stderr,"%s:%d\n",__FUNCTION__,__LINE__);
+    LOG_INFO("%s:%d\n",__FUNCTION__,__LINE__);
 }
 bool InitHW(char *name, char *model, int& type)
 {
@@ -56,34 +59,54 @@ bool InitHW(char *name, char *model, int& type)
 }
 bool OpenHW()
 {
-    fprintf(stderr,"%s:%d\n",__FUNCTION__,__LINE__);
+    LOG_INFO("%s:%d\n",__FUNCTION__,__LINE__);
     SetHWLO(m_lo_freq);
     return true;
 }
 void CloseHW()
 {
-    fprintf(stderr,"%s:%d\n",__FUNCTION__,__LINE__);
-    mp_genesis->Close();
+    LOG_INFO("%s:%d\n",__FUNCTION__,__LINE__);
+    if(NULL != mp_genesis)
+    {
+        mp_genesis->Close();
+        mp_genesis = NULL;
+    }
 }
 int StartHW(long freq)
 {
-    fprintf(stderr,"%s:%d\n",__FUNCTION__,__LINE__);
+    LOG_INFO("%s:%d new\n",__FUNCTION__,__LINE__);
+//  if(NULL != mp_genesis)
+//  {
+//      SetHWLO(freq);
+//      TuneChanged(freq);
+//  }
     return 0;
 }
 void StopHW()
 {
-    fprintf(stderr,"%s:%d\n",__FUNCTION__,__LINE__);
+    LOG_INFO("%s:%d new\n",__FUNCTION__,__LINE__);
+//  if(NULL != mp_genesis)
+//  {
+//      mp_genesis->Close();
+//  }
 }
 int SetHWLO(long LOfreq)
 {
-    fprintf(stderr,"%s:%d LOfreq: %ld\n",__FUNCTION__,__LINE__, LOfreq);
-    mp_genesis->SetLO(LOfreq);
-    m_lo_freq = LOfreq;
+    LOG_INFO("%s:%d LOfreq: %ld\n",__FUNCTION__,__LINE__, LOfreq);
+    if(NULL != mp_genesis)
+    {
+        mp_genesis->SetLO(LOfreq);
+        m_lo_freq = LOfreq;
+    }
+    else
+    {
+        LOG_INFO("%s:%d ERROR: mp_genesis is NULL\n",__FUNCTION__,__LINE__);
+    }
     return 0;
 }
 int GetStatus()
 {
-    fprintf(stderr,"%s:%d\n",__FUNCTION__,__LINE__);
+    LOG_INFO("%s:%d\n",__FUNCTION__,__LINE__);
     return 0;
 }
 void SetCallback(void (* Callback)(int, int, float, void *))
@@ -93,91 +116,118 @@ void SetCallback(void (* Callback)(int, int, float, void *))
 // ext routs
 long GetHWLO()
 {
-    fprintf(stderr,"%s:%d\n",__FUNCTION__,__LINE__);
+    LOG_INFO("%s:%d\n",__FUNCTION__,__LINE__);
     return m_lo_freq;
 }
 void TuneChanged(long freq)
 {
-    fprintf(stderr,"%s:%d freq: %ld\n",__FUNCTION__,__LINE__, freq);
-    mp_genesis->SetBand(freq);
-    m_tune_freq = freq;
+    LOG_INFO("%s:%d freq: %ld\n",__FUNCTION__,__LINE__, freq);
+    if(NULL != mp_genesis)
+    {
+        mp_genesis->SetBand(freq);
+        m_tune_freq = freq;
+    }
+    else
+    {
+        LOG_INFO("%s:%d ERROR: mp_genesis is NULL\n",__FUNCTION__,__LINE__);
+    }
 }
 void IFLimitsChanged(long low, long high)
 {
     long LOfreq = (low + high)/2;
-    fprintf(stderr,"%s:%d low: %ld, high: %ld, LO = %ld\n",__FUNCTION__,__LINE__, low, high, LOfreq);
-    if((0 < LOfreq) && (LOfreq != m_lo_freq))
+    LOG_INFO("%s:%d low: %ld, high: %ld, LO = %ld\n",__FUNCTION__,__LINE__, low, high, LOfreq);
+    if(NULL != mp_genesis)
     {
-        mp_genesis->SetLO(LOfreq);
-        m_lo_freq = LOfreq;
+        if((0 < LOfreq) && (LOfreq != m_lo_freq))
+        {
+            mp_genesis->SetLO(LOfreq);
+            m_lo_freq = LOfreq;
+        }
     }
-
+    else
+    {
+        LOG_INFO("%s:%d ERROR: mp_genesis is NULL\n",__FUNCTION__,__LINE__);
+    }
 }
 long GetTune()
 {
-    fprintf(stderr,"%s:%d\n",__FUNCTION__,__LINE__);
+    LOG_INFO("%s:%d\n",__FUNCTION__,__LINE__);
     return m_tune_freq;
 }
 char GetMode()
 {
-    fprintf(stderr,"%s:%d\n",__FUNCTION__,__LINE__);
+    LOG_INFO("%s:%d\n",__FUNCTION__,__LINE__);
     return m_mode;
 }
 void ModeChanged(char mode)
 {
     m_mode = mode;
-    fprintf(stderr,"%s:%d %c\n",__FUNCTION__,__LINE__,mode);
+    LOG_INFO("%s:%d %c\n",__FUNCTION__,__LINE__,mode);
 }
 long GetHWSR()
 {
-    fprintf(stderr,"%s:%d\n",__FUNCTION__,__LINE__);
+    LOG_INFO("%s:%d\n",__FUNCTION__,__LINE__);
     return 0;
 }
 void HideGUI()
 {
-    fprintf(stderr,"%s:%d\n",__FUNCTION__,__LINE__);
+    LOG_INFO("%s:%d\n",__FUNCTION__,__LINE__);
 }
 void RawDataReady(long samprate, int *Ldata, int *Rdata, int numsamples)
 {
-    fprintf(stderr,"%s:%d samprate:%ld, numsamples:%d\n",__FUNCTION__,__LINE__, samprate, numsamples);
+    LOG_INFO("%s:%d samprate:%ld, numsamples:%d\n",__FUNCTION__,__LINE__, samprate, numsamples);
 }
 void GetFilters(int& loCut, int& hiCut, int& pitch)
 {
-    fprintf(stderr,"%s:%d\n",__FUNCTION__,__LINE__);
+    LOG_INFO("%s:%d\n",__FUNCTION__,__LINE__);
 }
 //
 int SetModeRxTx(int modeRxTx)
 {
-    fprintf(stderr,"%s:%d modeRxTx: %d\n",__FUNCTION__,__LINE__, modeRxTx);
-    mp_genesis->SetTx((0!=modeRxTx?true:false));
+    LOG_INFO("%s:%d modeRxTx: %d\n",__FUNCTION__,__LINE__, modeRxTx);
+    if(NULL != mp_genesis)
+    {
+        mp_genesis->SetTx((0!=modeRxTx?true:false));
+    }
+    else
+    {
+        LOG_INFO("%s:%d ERROR: mp_genesis is NULL\n",__FUNCTION__,__LINE__);
+    }
     return 0;
 }
 int ActivateTx(int magicA, int magicB)
 {
-    fprintf(stderr,"%s:%d magicA:%d, int magicB:%d\n",__FUNCTION__,__LINE__,magicA, magicB);
+    LOG_INFO("%s:%d magicA:%d, int magicB:%d\n",__FUNCTION__,__LINE__,magicA, magicB);
     return 0;
 }
 void VersionInfo(const char *name, int ver_major, int ver_minor)
 {
-    fprintf(stderr,"%s:%d name:\"%s\", ver_major:%d, ver_minor:%d\n",__FUNCTION__,__LINE__, name, ver_major, ver_minor);
+    LOG_INFO("%s:%d name:\"%s\", ver_major:%d, ver_minor:%d\n",__FUNCTION__,__LINE__, name, ver_major, ver_minor);
 }
 void SetPreamp(int db)
 {
-    fprintf(stderr,"%s:%d db=%d\n",__FUNCTION__,__LINE__, db);
-    if (0 > db)
+    LOG_INFO("%s:%d db=%d\n",__FUNCTION__,__LINE__, db);
+    if(NULL != mp_genesis)
     {
-        mp_genesis->SetAtten(true);
-        mp_genesis->SetRFPreamp(false);
-    }
-    else if ( 0 < db)
-    {
-        mp_genesis->SetAtten(false);
-        mp_genesis->SetRFPreamp(true);
+        if (0 > db)
+        {
+            mp_genesis->SetAtten(true);
+            mp_genesis->SetRFPreamp(false);
+        }
+        else if ( 0 < db)
+        {
+            mp_genesis->SetAtten(false);
+            mp_genesis->SetRFPreamp(true);
+        }
+        else
+        {
+            mp_genesis->SetAtten(false);
+            mp_genesis->SetRFPreamp(false);
+        }
     }
     else
     {
-        mp_genesis->SetAtten(false);
-        mp_genesis->SetRFPreamp(false);
+        LOG_INFO("%s:%d ERROR: mp_genesis is NULL\n",__FUNCTION__,__LINE__);
     }
 }
 } /* extern "C" */

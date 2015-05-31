@@ -14,6 +14,13 @@ public:
         BAD_ARG
     } tG59Err;
 
+
+    typedef struct tG59ThreadData
+    {
+      G59Cmd* p_instance;
+      // someday, may want to expand this
+    } tG59ThreadData;
+
 public:
     G59Cmd();
     virtual ~G59Cmd();
@@ -37,7 +44,11 @@ public:
     tG59Err auto_cor(const bool on_off);
     tG59Err sec_rx2(const bool on_off);
     tG59Err monitor(const bool on_off);
+    void* usb_read_thread_func();
+
 protected:
+    bool init_usb_read_thread();
+
     tG59Err private_set_freq(const long freq, const char* p_cmd);
     tG59Err private_send_on_off_cmd(const bool on_off, const char *p_on_cmd, const char *p_off_cmd);
     tG59Err private_cmd_arg2only(const unsigned char arg, const char *p_cmd);
@@ -46,6 +57,12 @@ protected:
     unsigned char m_out_endpoint;
     libusb_device_handle *mp_dev_handle;
     int m_interface;
+    pthread_t m_usb_read_thread;
+    bool m_usb_read_thread_running;
+    pthread_mutex_t m_usb_read_mutex;
+private:
+    static void* static_thread_func(void* p_data);
+
 
 };
 #endif /*G59CMD_H_*/

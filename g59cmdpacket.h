@@ -23,8 +23,11 @@ public:
     typedef unsigned char *tG59Packet;
 
     G59CmdPacket();
-    virtual ~G59CmdPacket() {};
+    G59CmdPacket(tG59Packet packet);
     G59CmdPacket(tconstG59Cmd cmd, tconstG59Arg1 arg1 = NULL, tconstG59Arg2 arg2 = NULL);
+    virtual ~G59CmdPacket() {};
+
+    void SetPacket(tG59Packet packet);
     void SetPacket(tconstG59Cmd cmd, tconstG59Arg1 arg1 = NULL, tconstG59Arg2 arg2 = NULL);
     void SetCmd(tconstG59Cmd cmd);
     void SetArg1(tconstG59Arg1 arg);

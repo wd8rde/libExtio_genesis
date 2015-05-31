@@ -5,6 +5,9 @@
 #include "genesis.h"
 #include "g59cmd.h"
 #include "simpleini-master/SimpleIni.h"
+
+#define LOG_ERR(...) {fprintf(stderr,__VA_ARGS__);}
+#define LOG_INFO(...) //{fprintf(stderr,__VA_ARGS__);}
 /**************************************************************/
 /** Base Class Genesis
 /**************************************************************/
@@ -80,6 +83,10 @@ Genesis::Genesis(int productid)
 
 Genesis::~Genesis()
 {
+    if (m_initialized)
+    {
+        Close();
+    }
 }
 
 std::string Genesis::GetMake()
@@ -103,7 +110,7 @@ bool Genesis::Init()
     bool hasmultiple = false;
     m_hasGPA10 = m_ini.GetBoolValue("g59","hasGPA10", true, &hasmultiple);
     m_hasMicPreamp = m_ini.GetBoolValue("g59","hasMicPreamp", true, &hasmultiple);
-    fprintf(stderr,"%s:%d m_hasGPA10=%d, m_hasMicPreamp=%d\n",__FUNCTION__,__LINE__,m_hasGPA10,m_hasMicPreamp);
+    LOG_INFO("%s:%d m_hasGPA10=%d, m_hasMicPreamp=%d\n",__FUNCTION__,__LINE__,m_hasGPA10,m_hasMicPreamp);
 
     //enable the GPA10 if it is available
     m_g59cmd.pa10(m_hasGPA10);
@@ -154,7 +161,7 @@ int Genesis::FindBand(long freq)
         if((it->low_freq <= freq) && (it->high_freq >= freq))
         {
             index = it->index;
-            fprintf(stderr, "%s:%d Found Band: Found %d, freq %ld, low %ld, high %ld\n",__FUNCTION__,__LINE__,index, freq, it->low_freq, it->high_freq);
+            LOG_INFO("%s:%d Found Band: Found %d, freq %ld, low %ld, high %ld\n",__FUNCTION__,__LINE__,index, freq, it->low_freq, it->high_freq);
             break;
         }
     }
@@ -210,7 +217,7 @@ bool Genesis::LoadConfigFile()
     {
         if (m_ini.LoadData(instream) < 0)
         {
-            fprintf(stderr,"%s:%d Failed to load config information from %s\n",__FUNCTION__,__LINE__,inifilepath.c_str());
+            LOG_ERR("%s:%d Failed to load config information from %s\n",__FUNCTION__,__LINE__,inifilepath.c_str());
             return false;
         }
         rtn = true;
@@ -218,7 +225,7 @@ bool Genesis::LoadConfigFile()
     }
     else
     {
-        fprintf(stderr,"%s:%d Failed to open %s for reading\n",__FUNCTION__,__LINE__,inifilepath.c_str());
+        LOG_ERR("%s:%d Failed to open %s for reading\n",__FUNCTION__,__LINE__,inifilepath.c_str());
     }
     return rtn;
 }
@@ -239,7 +246,7 @@ bool Genesis::SaveConfigFile()
     {
         if (m_ini.Save(outstream) < 0)
         {
-            fprintf(stderr,"%s:%d Failed to save config information from %s\n",__FUNCTION__,__LINE__,inifilepath.c_str());
+            LOG_ERR("%s:%d Failed to save config information from %s\n",__FUNCTION__,__LINE__,inifilepath.c_str());
             return false;
         }
         rtn = true;
@@ -247,7 +254,7 @@ bool Genesis::SaveConfigFile()
     }
     else
     {
-        fprintf(stderr,"%s:%d Failed to open %s for writing\n",__FUNCTION__,__LINE__,inifilepath.c_str());
+        LOG_ERR("%s:%d Failed to open %s for writing\n",__FUNCTION__,__LINE__,inifilepath.c_str());
     }
     return rtn;
 }

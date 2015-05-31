@@ -1,9 +1,10 @@
 // vim: sw=8:ts=8:noexpandtab
+#include <stdio.h>
+#include <pthread.h>
+
 #include "usbutil.h"
 
-#include <stdio.h>
-
-//#define DUMP_STRUCTURES
+#define DUMP_STRUCTURES
 #ifdef DUMP_STRUCTURES
 #define DUMP_DEVICE_DESCRIPTOR(...) usbutil_dump_device_descriptor(__VA_ARGS__)
 #define DUMP_CONFIG_DESCRIPTOR(...) usbutil_dump_config_descriptor(__VA_ARGS__)
@@ -11,38 +12,46 @@
 #define DUMP_DEVICE_DESCRIPTOR(...)
 #define DUMP_CONFIG_DESCRIPTOR(...)
 #endif
+#define LOG(...) { fprintf(stderr,__VA_ARGS__); fflush(stderr); }
+
+
+//static pthread_mutex_t s_usb_mutex = PTHREAD_MUTEX_INITIALIZER; 
 
 int write_to_device(libusb_device_handle *dev_handle, unsigned char endpoint, unsigned char *data, int length)
 {
+    //pthread_mutex_lock(&s_usb_mutex);
     /* Send the message to endpoint 1 with a 100ms timeout. */
     int numBytes = 0;
-    const unsigned int TIMEOUT = 100;
+    const unsigned int TIMEOUT = 1000;
     int res = libusb_interrupt_transfer(dev_handle, endpoint, data, length, &numBytes, TIMEOUT);
     if(res == 0)
     {
-        printf("%d bytes transmitted successfully.\n", numBytes);
+        LOG("%d bytes transmitted successfully.\n", numBytes);
     } else
     {
-        fprintf(stderr, "Error sending message to device.\n");
+        LOG("Error: sending message to device, %s:%s.\n", libusb_error_name(res), libusb_strerror(static_cast<libusb_error>(res)));
     }
 
+    //pthread_mutex_unlock(&s_usb_mutex);
     return  (numBytes);
 }
 
 int read_from_device(libusb_device_handle *dev_handle, unsigned char endpoint, unsigned char *data, int length)
 {
+    //pthread_mutex_lock(&s_usb_mutex);
     /* Send the message to endpoint 1 with a 100ms timeout. */
     int numBytes = 0;
     const unsigned int TIMEOUT = 100;
     int res = libusb_interrupt_transfer(dev_handle, endpoint, data, length, &numBytes, TIMEOUT);
     if(res == 0)
     {
-        printf("%d bytes received successfully.\n", numBytes);
-    } else
+        LOG("%d bytes received successfully.\n", numBytes);
+    } else if ( LIBUSB_ERROR_TIMEOUT != res )
     {
-        fprintf(stderr, "Error retrieving message from device.\n");
+        LOG("Error retrieving message from device, %s:%s.\n", libusb_error_name(res), libusb_strerror(static_cast<libusb_error>(res)));
     }
 
+    //pthread_mutex_unlock(&s_usb_mutex);
     return  (numBytes);
 }
 
@@ -115,32 +124,35 @@ void usbutil_dump_device_descriptor(FILE *file, struct libusb_device_descriptor 
 static int claim_device(libusb_device_handle *dev, int interface)
 {
     int err;
+
+    libusb_release_interface(dev, 0);
+
     if(libusb_kernel_driver_active(dev, interface))
     {
-        fprintf(stderr, "A kernel has claimed the interface, detaching it...\n");
+        LOG("A kernel has claimed the interface, detaching it...\n");
         if((err = libusb_detach_kernel_driver(dev, interface)) != 0)
         {
-            fprintf(stderr, "Failed to Disconnected the OS driver: %s\n", usbutil_error_to_string(err));
+            LOG("Failed to Disconnected the OS driver: %s\n", usbutil_error_to_string(err));
             return (err);
         }
     }
 
     if((err = libusb_set_configuration(dev, 1)))
     {
-        fprintf(stderr, "libusb_set_configuration: %s\n", usbutil_error_to_string(err));
+        LOG("libusb_set_configuration: %s\n", usbutil_error_to_string(err));
         return (err);
     }
 
     /* claim interface */
     if((err = libusb_claim_interface(dev, interface)))
     {
-        fprintf(stderr, "Claim interface error: %s\n", usbutil_error_to_string(err));
+        LOG("Claim interface error: %s\n", usbutil_error_to_string(err));
         return (err);
     }
 
     if((err = libusb_set_interface_alt_setting(dev, interface, 0)))
     {
-        fprintf(stderr, "libusb_set_interface_alt_setting: %s\n", usbutil_error_to_string(err));
+        LOG("libusb_set_interface_alt_setting: %s\n", usbutil_error_to_string(err));
         return (err);
     }
 
@@ -157,6 +169,7 @@ libusb_device_handle* open_device(libusb_context *ctx, int vendor_id, int produc
     int found_in_endpoint = 0;
     int found_out_endpoint = 0;
 
+    //pthread_mutex_lock(&s_usb_mutex);
     // discover devices
     libusb_device **list;
     libusb_device *found = NULL;
@@ -168,7 +181,8 @@ libusb_device_handle* open_device(libusb_context *ctx, int vendor_id, int produc
     int err = 0;
     if(cnt < 0)
     {
-        fprintf(stderr, "Failed to get a list of devices\n");
+        LOG("Failed to get a list of devices\n");
+        //pthread_mutex_unlock(&s_usb_mutex);
         return (NULL);
     }
 
@@ -178,8 +192,9 @@ libusb_device_handle* open_device(libusb_context *ctx, int vendor_id, int produc
         err = libusb_get_device_descriptor(device, &descriptor);
         if(err)
         {
-            fprintf(stderr, "libusb_get_device_descriptor: %s\n", usbutil_error_to_string(err));
+            LOG("libusb_get_device_descriptor: %s\n", usbutil_error_to_string(err));
             libusb_free_device_list(list, 1);
+            //pthread_mutex_unlock(&s_usb_mutex);
             return (NULL);
         }
         if((descriptor.idVendor == vendor_id) && (descriptor.idProduct == product_id))
@@ -192,15 +207,17 @@ libusb_device_handle* open_device(libusb_context *ctx, int vendor_id, int produc
 
     if(!found)
     {
-        fprintf(stderr, "Device not found\n");
+        LOG("Device not found\n");
         libusb_free_device_list(list, 1);
+        //pthread_mutex_unlock(&s_usb_mutex);
         return (NULL);
     }
 
     if((err = libusb_open(found, &device_handle)))
     {
-        fprintf(stderr, "Failed OPEN the device: %s\n", usbutil_error_to_string(err));
+        LOG("Failed OPEN the device: %s\n", usbutil_error_to_string(err));
         libusb_free_device_list(list, 1);
+        //pthread_mutex_unlock(&s_usb_mutex);
         return (NULL);
     }
 
@@ -208,7 +225,8 @@ libusb_device_handle* open_device(libusb_context *ctx, int vendor_id, int produc
 
     if((err = claim_device(device_handle, 0)) != 0)
     {
-        fprintf(stderr, "Failed to claim the usb interface: %s\n", usbutil_error_to_string(err));
+        LOG("Failed to claim the usb interface: %s\n", usbutil_error_to_string(err));
+        //pthread_mutex_unlock(&s_usb_mutex);
         return (NULL);
     }
 
@@ -216,7 +234,8 @@ libusb_device_handle* open_device(libusb_context *ctx, int vendor_id, int produc
     err = libusb_get_active_config_descriptor(found, &config_descriptor);
     if(err)
     {
-        fprintf(stderr, "libusb_get_active_config_descriptor: %s\n", usbutil_error_to_string(err));
+        LOG("libusb_get_active_config_descriptor: %s\n", usbutil_error_to_string(err));
+        //pthread_mutex_unlock(&s_usb_mutex);
         return (NULL);
     }
 
@@ -254,21 +273,25 @@ libusb_device_handle* open_device(libusb_context *ctx, int vendor_id, int produc
     {
         rtn = device_handle;
     }
+    //pthread_mutex_unlock(&s_usb_mutex);
     return (rtn);
 }
 
 int close_device(libusb_device_handle *dev, int interface_idx)
 {
     int err =0;
+    //pthread_mutex_lock(&s_usb_mutex);
+    LOG("%s:%d\n", __FUNCTION__,__LINE__);
     if(libusb_kernel_driver_active(dev, 0))
     {
-        fprintf(stderr, "A kernel has claimed the interface, detaching it...\n");
+        LOG("A kernel has claimed the interface, detaching it...\n");
         if((err = libusb_detach_kernel_driver(dev, 0)) != 0)
         {
-            fprintf(stderr, "Failed to Disconnected the OS driver: %s\n", usbutil_error_to_string(err));
+            LOG("Failed to Disconnected the OS driver: %s\n", usbutil_error_to_string(err));
         }
     }
     libusb_release_interface(dev, 0);
+    //pthread_mutex_unlock(&s_usb_mutex);
     return (err);
 }
 
