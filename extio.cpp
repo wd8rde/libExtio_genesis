@@ -5,9 +5,24 @@
 
 #include "genesis.h"
 #include "g59cmd.h"
+#include "extio.h"
 
 #define LOG_ERR(...) {fprintf(stderr,__VA_ARGS__);}
 #define LOG_INFO(...) {fprintf(stderr,__VA_ARGS__);}
+
+#ifdef DEBUG
+#define LOG_DEBUG(...) {fprintf(stderr,__VA_ARGS__);}
+#else
+#define LOG_DEBUG(...) {}
+#endif
+
+//#define DO_ANNOYING
+#ifdef DO_ANNOYING
+#define LOG_ANNOYING(...) {fprintf(stderr,__VA_ARGS__);fflush(stderr);}
+#else
+#define LOG_ANNOYING(...) {}
+#endif
+
 
 static G59 m_g59;
 static G11 m_g11;
@@ -18,6 +33,98 @@ static char m_model_str[256];
 static char m_mode = '\0';
 static long m_tune_freq = 1800000;
 static long m_lo_freq = 1800000;
+//Winrad callback pointer
+//void extIOCallback(int cnt, int status, float IQoffs, short IQdata[])
+static void (* mp_callback)(int, int, float, void *) = NULL;
+
+class extio_observer : public Genesis_Observer
+{
+public:
+    extio_observer(Genesis *p_genesis)
+        : Genesis_Observer()
+    {
+        LOG_ANNOYING("%s:%d\n",__FUNCTION__,__LINE__);
+        if(NULL != p_genesis)
+        {
+            LOG_ANNOYING("%s:%d this=%p\n",__FUNCTION__,__LINE__,this);
+            p_genesis->register_observer(this);
+        }
+    };
+
+    virtual void OnIdle()
+    {
+        LOG_ANNOYING("%s:%d\n",__FUNCTION__,__LINE__);
+        if(NULL != mp_callback)
+        {
+            //idle timeout, semi-breakin
+            //request rx
+            LOG_ANNOYING("%s:%d ecsRXRequest\n",__FUNCTION__,__LINE__);
+            mp_callback(-1,ecsRXRequest,0.0,NULL);
+        }
+    };
+
+    virtual void OnTX(bool on_off)
+    {
+        LOG_ANNOYING("%s:%d\n",__FUNCTION__,__LINE__);
+        if(NULL != mp_callback)
+        {
+            if (on_off)
+            {
+                //request tx
+                LOG_ANNOYING("%s:%d ecsTXRequest\n",__FUNCTION__,__LINE__);
+                mp_callback(-1,ecsTXRequest,0.0,NULL);
+            }
+            else
+            {
+                //request rx
+                LOG_ANNOYING("%s:%d ecsRXRequest\n",__FUNCTION__,__LINE__);
+                mp_callback(-1,ecsRXRequest,0.0,NULL);
+            }
+        }
+    };
+
+    virtual void OnDOT(bool on_off)
+    {
+        LOG_ANNOYING("%s:%d\n",__FUNCTION__,__LINE__);
+        if(NULL != mp_callback)
+        {
+            if (on_off)
+            {
+                //request dot on
+                LOG_DEBUG("%s:%d ecsDotOnRequest\n",__FUNCTION__,__LINE__);
+                mp_callback(-1,ecsDotOnRequest,0.0,NULL);
+            }
+            else
+            {
+                //request dot off
+                LOG_ANNOYING("%s:%d ecsDotOffRequest\n",__FUNCTION__,__LINE__);
+                mp_callback(-1,ecsDotOffRequest,0.0,NULL);
+            }
+        }
+    };
+
+    virtual void OnDASH(bool on_off)
+    {
+        LOG_ANNOYING("%s:%d\n",__FUNCTION__,__LINE__);
+        if(NULL != mp_callback)
+        {
+            if (on_off)
+            {
+                //request dash on
+                LOG_ANNOYING("%s:%d ecsDashOnRequest\n",__FUNCTION__,__LINE__);
+                mp_callback(-1,ecsDashOnRequest,0.0,NULL);
+            }
+            else
+            {
+                //request dash off
+                LOG_ANNOYING("%s:%d ecsDashOffRequest\n",__FUNCTION__,__LINE__);
+                mp_callback(-1,ecsDashOffRequest,0.0,NULL);
+            }
+        }
+    };
+};
+
+static extio_observer *mp_extio_observer = NULL;
 
 extern "C"
 {
@@ -27,7 +134,7 @@ void TuneChanged(long freq);
 
 void ShowGUI()
 {
-    LOG_INFO("%s:%d\n",__FUNCTION__,__LINE__);
+    LOG_DEBUG("%s:%d\n",__FUNCTION__,__LINE__);
 }
 bool InitHW(char *name, char *model, int& type)
 {
@@ -55,17 +162,21 @@ bool InitHW(char *name, char *model, int& type)
         type = 4;
     }
 
+    if (NULL != mp_genesis)
+    {
+        mp_extio_observer = new extio_observer(mp_genesis);
+    }
     return rtn;
 }
 bool OpenHW()
 {
-    LOG_INFO("%s:%d\n",__FUNCTION__,__LINE__);
+    LOG_DEBUG("%s:%d\n",__FUNCTION__,__LINE__);
     SetHWLO(m_lo_freq);
     return true;
 }
 void CloseHW()
 {
-    LOG_INFO("%s:%d\n",__FUNCTION__,__LINE__);
+    LOG_DEBUG("%s:%d\n",__FUNCTION__,__LINE__);
     if(NULL != mp_genesis)
     {
         mp_genesis->Close();
@@ -74,7 +185,7 @@ void CloseHW()
 }
 int StartHW(long freq)
 {
-    LOG_INFO("%s:%d new\n",__FUNCTION__,__LINE__);
+    LOG_DEBUG("%s:%d new\n",__FUNCTION__,__LINE__);
 //  if(NULL != mp_genesis)
 //  {
 //      SetHWLO(freq);
@@ -84,7 +195,7 @@ int StartHW(long freq)
 }
 void StopHW()
 {
-    LOG_INFO("%s:%d new\n",__FUNCTION__,__LINE__);
+    LOG_DEBUG("%s:%d new\n",__FUNCTION__,__LINE__);
 //  if(NULL != mp_genesis)
 //  {
 //      mp_genesis->Close();
@@ -92,7 +203,7 @@ void StopHW()
 }
 int SetHWLO(long LOfreq)
 {
-    LOG_INFO("%s:%d LOfreq: %ld\n",__FUNCTION__,__LINE__, LOfreq);
+    LOG_DEBUG("%s:%d LOfreq: %ld\n",__FUNCTION__,__LINE__, LOfreq);
     if(NULL != mp_genesis)
     {
         mp_genesis->SetLO(LOfreq);
@@ -100,28 +211,32 @@ int SetHWLO(long LOfreq)
     }
     else
     {
-        LOG_INFO("%s:%d ERROR: mp_genesis is NULL\n",__FUNCTION__,__LINE__);
+        LOG_DEBUG("%s:%d ERROR: mp_genesis is NULL\n",__FUNCTION__,__LINE__);
     }
     return 0;
 }
 int GetStatus()
 {
-    LOG_INFO("%s:%d\n",__FUNCTION__,__LINE__);
+    LOG_DEBUG("%s:%d\n",__FUNCTION__,__LINE__);
     return 0;
 }
 void SetCallback(void (* Callback)(int, int, float, void *))
 {
     fprintf(stderr,"%s:%d\n",__FUNCTION__,__LINE__);
+    if (NULL != Callback)
+    {
+        mp_callback = Callback;
+    }
 }
 // ext routs
 long GetHWLO()
 {
-    LOG_INFO("%s:%d\n",__FUNCTION__,__LINE__);
+    LOG_DEBUG("%s:%d\n",__FUNCTION__,__LINE__);
     return m_lo_freq;
 }
 void TuneChanged(long freq)
 {
-    LOG_INFO("%s:%d freq: %ld\n",__FUNCTION__,__LINE__, freq);
+    LOG_DEBUG("%s:%d freq: %ld\n",__FUNCTION__,__LINE__, freq);
     if(NULL != mp_genesis)
     {
         mp_genesis->SetBand(freq);
@@ -129,13 +244,13 @@ void TuneChanged(long freq)
     }
     else
     {
-        LOG_INFO("%s:%d ERROR: mp_genesis is NULL\n",__FUNCTION__,__LINE__);
+        LOG_DEBUG("%s:%d ERROR: mp_genesis is NULL\n",__FUNCTION__,__LINE__);
     }
 }
 void IFLimitsChanged(long low, long high)
 {
     long LOfreq = (low + high)/2;
-    LOG_INFO("%s:%d low: %ld, high: %ld, LO = %ld\n",__FUNCTION__,__LINE__, low, high, LOfreq);
+    LOG_DEBUG("%s:%d low: %ld, high: %ld, LO = %ld\n",__FUNCTION__,__LINE__, low, high, LOfreq);
     if(NULL != mp_genesis)
     {
         if((0 < LOfreq) && (LOfreq != m_lo_freq))
@@ -146,67 +261,68 @@ void IFLimitsChanged(long low, long high)
     }
     else
     {
-        LOG_INFO("%s:%d ERROR: mp_genesis is NULL\n",__FUNCTION__,__LINE__);
+        LOG_DEBUG("%s:%d ERROR: mp_genesis is NULL\n",__FUNCTION__,__LINE__);
     }
 }
 long GetTune()
 {
-    LOG_INFO("%s:%d\n",__FUNCTION__,__LINE__);
+    LOG_DEBUG("%s:%d\n",__FUNCTION__,__LINE__);
     return m_tune_freq;
 }
 char GetMode()
 {
-    LOG_INFO("%s:%d\n",__FUNCTION__,__LINE__);
+    LOG_DEBUG("%s:%d\n",__FUNCTION__,__LINE__);
     return m_mode;
 }
 void ModeChanged(char mode)
 {
     m_mode = mode;
-    LOG_INFO("%s:%d %c\n",__FUNCTION__,__LINE__,mode);
+    LOG_DEBUG("%s:%d %c\n",__FUNCTION__,__LINE__,mode);
 }
 long GetHWSR()
 {
-    LOG_INFO("%s:%d\n",__FUNCTION__,__LINE__);
+    LOG_DEBUG("%s:%d\n",__FUNCTION__,__LINE__);
     return 0;
 }
 void HideGUI()
 {
-    LOG_INFO("%s:%d\n",__FUNCTION__,__LINE__);
+    LOG_DEBUG("%s:%d\n",__FUNCTION__,__LINE__);
 }
 void RawDataReady(long samprate, int *Ldata, int *Rdata, int numsamples)
 {
-    LOG_INFO("%s:%d samprate:%ld, numsamples:%d\n",__FUNCTION__,__LINE__, samprate, numsamples);
+    LOG_DEBUG("%s:%d samprate:%ld, numsamples:%d\n",__FUNCTION__,__LINE__, samprate, numsamples);
 }
 void GetFilters(int& loCut, int& hiCut, int& pitch)
 {
-    LOG_INFO("%s:%d\n",__FUNCTION__,__LINE__);
+    LOG_DEBUG("%s:%d\n",__FUNCTION__,__LINE__);
 }
 //
 int SetModeRxTx(int modeRxTx)
 {
-    LOG_INFO("%s:%d modeRxTx: %d\n",__FUNCTION__,__LINE__, modeRxTx);
+    LOG_DEBUG("%s:%d modeRxTx: %d\n",__FUNCTION__,__LINE__, modeRxTx);
     if(NULL != mp_genesis)
     {
         mp_genesis->SetTx((0!=modeRxTx?true:false));
     }
     else
     {
-        LOG_INFO("%s:%d ERROR: mp_genesis is NULL\n",__FUNCTION__,__LINE__);
+        LOG_DEBUG("%s:%d ERROR: mp_genesis is NULL\n",__FUNCTION__,__LINE__);
     }
     return 0;
 }
 int ActivateTx(int magicA, int magicB)
 {
-    LOG_INFO("%s:%d magicA:%d, int magicB:%d\n",__FUNCTION__,__LINE__,magicA, magicB);
+    LOG_DEBUG("%s:%d magicA:%d, int magicB:%d\n",__FUNCTION__,__LINE__,magicA, magicB);
     return 0;
 }
 void VersionInfo(const char *name, int ver_major, int ver_minor)
 {
-    LOG_INFO("%s:%d name:\"%s\", ver_major:%d, ver_minor:%d\n",__FUNCTION__,__LINE__, name, ver_major, ver_minor);
+    LOG_DEBUG("%s:%d name:\"%s\", ver_major:%d, ver_minor:%d\n",__FUNCTION__,__LINE__, name, ver_major, ver_minor);
 }
+
 void SetPreamp(int db)
 {
-    LOG_INFO("%s:%d db=%d\n",__FUNCTION__,__LINE__, db);
+    LOG_DEBUG("%s:%d db=%d\n",__FUNCTION__,__LINE__, db);
     if(NULL != mp_genesis)
     {
         if (0 > db)
@@ -227,7 +343,21 @@ void SetPreamp(int db)
     }
     else
     {
-        LOG_INFO("%s:%d ERROR: mp_genesis is NULL\n",__FUNCTION__,__LINE__);
+        LOG_DEBUG("%s:%d ERROR: mp_genesis is NULL\n",__FUNCTION__,__LINE__);
     }
 }
+
+void SetWpm(int wpm)
+{
+    LOG_DEBUG("%s:%d wpm=%d\n",__FUNCTION__,__LINE__, wpm);
+    if(NULL != mp_genesis)
+    {
+        mp_genesis->SetWpm(wpm);
+    }
+    else
+    {
+        LOG_DEBUG("%s:%d ERROR: mp_genesis is NULL\n",__FUNCTION__,__LINE__);
+    }
+}
+
 } /* extern "C" */

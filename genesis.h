@@ -20,6 +20,7 @@ public:
 
     Genesis(int productid);
     virtual ~Genesis();
+    void register_observer(Genesis_Observer *p_observer);
     std::string GetMake();
     int GetVendorId();
     virtual std::string GetModel() = 0;
@@ -32,6 +33,8 @@ public:
     bool SetTx(bool tx_enable);
     void SetAtten(bool on);
     void SetRFPreamp(bool on);
+    void SetWpm(int wpm);
+
     bool LoadConfigFile();
     bool SaveConfigFile();
     int m_vendorid;
@@ -41,6 +44,10 @@ public:
     static const BandFilters_t ms_bandfilters;
     bool m_hasMicPreamp;
     bool m_hasGPA10;
+    unsigned long m_tx_dropout_ms;
+    int m_keyer_mode;
+    int m_keyer_speed;
+    double m_keyer_ratio;
     int m_current_filter;
     long m_current_freq;
     CSimpleIniA m_ini;

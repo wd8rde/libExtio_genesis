@@ -67,6 +67,7 @@ const Genesis::BandFilters_t Genesis::ms_bandfilters(
 });
 
 static const char* INIFILENAME = ".genesis-sdr.ini";
+static const unsigned long TX_DROPOUT_MS = 300;
 
 Genesis::Genesis(int productid)
     :m_vendorid(0xfffe)
@@ -74,6 +75,10 @@ Genesis::Genesis(int productid)
     ,m_initialized(false)
     ,m_hasMicPreamp(true)
     ,m_hasGPA10(true)
+    ,m_tx_dropout_ms(0)
+    ,m_keyer_mode(G59Cmd::K_MODE_NONE)
+    ,m_keyer_speed(13)
+    ,m_keyer_ratio(3.0)
     ,m_current_filter(0)
     ,m_current_freq(0)
 
@@ -87,6 +92,11 @@ Genesis::~Genesis()
     {
         Close();
     }
+}
+
+void Genesis::register_observer(Genesis_Observer *p_observer)
+{
+    m_g59cmd.register_observer(p_observer);
 }
 
 std::string Genesis::GetMake()
@@ -109,11 +119,28 @@ bool Genesis::Init()
     LoadConfigFile();
     bool hasmultiple = false;
     m_hasGPA10 = m_ini.GetBoolValue("g59","hasGPA10", true, &hasmultiple);
+    m_ini.SetBoolValue("g59","hasGPA10",m_hasGPA10,"# true if PA10 enabled", true);
     m_hasMicPreamp = m_ini.GetBoolValue("g59","hasMicPreamp", true, &hasmultiple);
-    LOG_INFO("%s:%d m_hasGPA10=%d, m_hasMicPreamp=%d\n",__FUNCTION__,__LINE__,m_hasGPA10,m_hasMicPreamp);
+    m_ini.SetBoolValue("g59","hasMicPreamp",m_hasMicPreamp,"# true if Mic Preamp enabled", true);
 
     //enable the GPA10 if it is available
     m_g59cmd.pa10(m_hasGPA10);
+
+    //setup the keyer
+    m_keyer_ratio = m_ini.GetDoubleValue("g59", "keyerRatio",3.0, &hasmultiple);
+    m_ini.SetDoubleValue("g59","keyerRatio",m_keyer_ratio,"# keyer weight 1:ratio", true);
+    m_keyer_speed = m_ini.GetLongValue("g59", "keyerSpeed",13, &hasmultiple);
+    m_ini.SetLongValue("g59","keyerSpeed",m_keyer_speed,"# keyer speed in wpm", true);
+    m_keyer_mode = m_ini.GetLongValue("g59", "keyerMode",G59Cmd::K_MODE_NONE, &hasmultiple);
+    m_ini.SetLongValue("g59","keyerMode",m_keyer_mode,"# keyer mode code", true);
+
+    m_g59cmd.k_ratio(m_keyer_ratio);
+    m_g59cmd.k_speed(m_keyer_speed);
+    m_g59cmd.k_mode(m_keyer_mode);
+
+    m_tx_dropout_ms = m_ini.GetLongValue("g59", "txDropoutMS", TX_DROPOUT_MS, &hasmultiple);
+    m_ini.SetLongValue("g59","txDropoutMS",m_tx_dropout_ms,"# TX Dropout time in milliseconds", true);
+    m_g59cmd.set_tx_dropout_ms(m_tx_dropout_ms);
 
     return m_initialized;
 }
@@ -122,6 +149,7 @@ bool Genesis::Close()
 {
     if (m_initialized)
     {
+        SaveConfigFile();
         m_initialized = !m_g59cmd.Close();
     }
 
@@ -161,7 +189,7 @@ int Genesis::FindBand(long freq)
         if((it->low_freq <= freq) && (it->high_freq >= freq))
         {
             index = it->index;
-            LOG_INFO("%s:%d Found Band: Found %d, freq %ld, low %ld, high %ld\n",__FUNCTION__,__LINE__,index, freq, it->low_freq, it->high_freq);
+            //LOG_INFO("%s:%d Found Band: Found %d, freq %ld, low %ld, high %ld\n",__FUNCTION__,__LINE__,index, freq, it->low_freq, it->high_freq);
             break;
         }
     }
@@ -201,12 +229,17 @@ void Genesis::SetRFPreamp(bool on)
     m_g59cmd.rf_preamp(on);
 }
 
+void Genesis::SetWpm(int wpm)
+{
+    m_g59cmd.k_speed(wpm);
+}
+
 bool Genesis::LoadConfigFile()
 {
     bool rtn = false;
     m_ini.SetUnicode(true);
-    m_ini.SetMultiKey(true);
-    m_ini.SetMultiLine(true);
+    m_ini.SetMultiKey(false);
+    m_ini.SetMultiLine(false);
 
     // load the file
     std::string homepath = getenv("HOME");
@@ -234,14 +267,14 @@ bool Genesis::SaveConfigFile()
 {
     bool rtn = false;
     m_ini.SetUnicode(true);
-    m_ini.SetMultiKey(true);
-    m_ini.SetMultiLine(true);
+    m_ini.SetMultiKey(false);
+    m_ini.SetMultiLine(false);
 
     // load the file
     std::string homepath = getenv("HOME");
     std::string inifilepath((homepath + "/" + INIFILENAME).c_str());
     std::ofstream outstream;
-    outstream.open(inifilepath.c_str(), std::ifstream::out | std::ifstream::binary  | std::ifstream::trunc);
+    outstream.open(inifilepath.c_str(), std::ofstream::out | std::ofstream::binary  | std::ofstream::trunc);
     if (outstream.is_open())
     {
         if (m_ini.Save(outstream) < 0)
