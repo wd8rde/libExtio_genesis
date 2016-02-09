@@ -2,7 +2,7 @@
 #define CMDBASE_H_
 
 #include "hid_util.h"
-#include "g59cmdpacket.h"
+#include "cmdpacket.h"
 #include "genesis_observer.h"
 
 class CmdBase

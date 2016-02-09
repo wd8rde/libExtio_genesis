@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include "g59cmdpacket.h"
+#include "cmdpacket.h"
 
 
 #define LOG_ERR(...) {fprintf(stderr,__VA_ARGS__);}

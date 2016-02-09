@@ -1,5 +1,5 @@
-#ifndef GENESISCMDPACKET_H_
-#define GENESISCMDPACKET_H_
+#ifndef CMDPACKET_H_
+#define CMDPACKET_H_
 
 #include "hid_util.h"
 
@@ -45,4 +45,4 @@ public:
 protected:
     unsigned char m_packet[GENESIS_PACKET_LEN];
 };
-#endif /* GENESISCMDPACKET_H_*/
+#endif /* CMDPACKET_H_*/

@@ -8,7 +8,7 @@ libextio_genesis_la_SOURCES = \
 	extio.h\
 	genesis.cpp\
 	cmdbase.cpp\
-	g59cmdpacket.cpp\
+	cmdpacket.cpp\
 	genesis_observer.cpp\
 	hid_util.cpp\
 	bsd_string.c\
