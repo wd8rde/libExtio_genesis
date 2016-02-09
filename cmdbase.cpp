@@ -174,22 +174,22 @@ void* CmdBase::usb_read_thread_func()
 
     t_cmd_enum last_cmd = NONE;
 
-    unsigned char rx_packet[G59_PACKET_LEN];
+    unsigned char rx_packet[GENESIS_PACKET_LEN];
     while(m_usb_read_thread_running)
     {
         if (NULL != m_dev_handle)
         {
             clock_gettime(TIMER_CLOCK_ID, &current_time);
-            memset(rx_packet,0,G59_PACKET_LEN);
-            int rslt = read_from_device(m_dev_handle, reinterpret_cast<unsigned char*>(rx_packet), G59_PACKET_LEN);
+            memset(rx_packet,0,GENESIS_PACKET_LEN);
+            int rslt = read_from_device(m_dev_handle, reinterpret_cast<unsigned char*>(rx_packet), GENESIS_PACKET_LEN);
             if(0 < rslt)
             {
-                G59CmdPacket g59_packet(reinterpret_cast<G59CmdPacket::tG59Packet>(rx_packet));
-                CmdBase::t_cmd_enum cmd = private_parse_packet(g59_packet);
+                CmdPacket genesis_packet(reinterpret_cast<CmdPacket::tGenesisPacket>(rx_packet));
+                CmdBase::t_cmd_enum cmd = private_parse_packet(genesis_packet);
                 if (cmd != last_cmd)
                 {
                     // handle_cmd returns true if tx active
-                    CmdBase::t_tx_state tx_state = private_handle_cmd(cmd, g59_packet);
+                    CmdBase::t_tx_state tx_state = private_handle_cmd(cmd, genesis_packet);
                     switch (tx_state)
                     {
                     case TX_STATE_ON:
@@ -227,13 +227,13 @@ void* CmdBase::usb_read_thread_func()
                     // Been idle too long
                     timer_running = false;
 
-                    char arg1[G59_ARG1_LENGTH];
-                    memset(arg1, 0, G59_ARG1_LENGTH);
-                    char arg2[G59_ARG2_LENGTH];
-                    memset(arg2, 0, G59_ARG2_LENGTH);
+                    char arg1[GENESIS_ARG1_LENGTH];
+                    memset(arg1, 0, GENESIS_ARG1_LENGTH);
+                    char arg2[GENESIS_ARG2_LENGTH];
+                    memset(arg2, 0, GENESIS_ARG2_LENGTH);
                     CmdBase::t_cmd_enum cmd = TX_OFF;
-                    G59CmdPacket g59_packet(cmd2str[cmd].cmd_str, arg1, arg2);
-                    private_handle_cmd(cmd, g59_packet);
+                    CmdPacket genesis_packet(cmd2str[cmd].cmd_str, arg1, arg2);
+                    private_handle_cmd(cmd, genesis_packet);
 
                     clock_gettime(TIMER_CLOCK_ID, &current_time);
                     previous_time.tv_sec = current_time.tv_sec;
@@ -251,16 +251,16 @@ CmdBase::tGenesisErr CmdBase::set_name(const char* name)
     CmdBase::tGenesisErr rtn = FAILED_TO_SEND;
     if (NULL != m_dev_handle)
     {
-        G59CmdPacket::tp_constG59Cmd cmd = "SET_NAME";
-        G59CmdPacket::tconstG59Arg1 arg1 = "Genesis";
+        CmdPacket::tp_constGenesisCmd cmd = "SET_NAME";
+        CmdPacket::tconstGenesisArg1 arg1 = "Genesis";
 
-        G59CmdPacket packet(cmd, arg1);
+        CmdPacket packet(cmd, arg1);
         packet.DumpPacket();
         #ifdef SIMULATE_USB_CONNECTION
         return OK;
         #endif
-        int nBytes = write_to_device(m_dev_handle, packet.GetPacket(), G59_PACKET_LEN);
-        if(G59_PACKET_LEN == nBytes)
+        int nBytes = write_to_device(m_dev_handle, packet.GetPacket(), GENESIS_PACKET_LEN);
+        if(GENESIS_PACKET_LEN == nBytes)
         {
            rtn = OK;
         }
@@ -279,18 +279,18 @@ CmdBase::tGenesisErr CmdBase::private_set_freq(const long freq, const char* p_cm
     if (NULL != m_dev_handle)
     {
         bool smooth = false;
-        char arg1[G59_ARG1_LENGTH];
-        memset(arg1, 0, G59_ARG1_LENGTH);
+        char arg1[GENESIS_ARG1_LENGTH];
+        memset(arg1, 0, GENESIS_ARG1_LENGTH);
 
-        char arg2[G59_ARG2_LENGTH];
-        memset(arg2, 0, G59_ARG2_LENGTH);
+        char arg2[GENESIS_ARG2_LENGTH];
+        memset(arg2, 0, GENESIS_ARG2_LENGTH);
 
-        G59CmdPacket::tp_constG59Cmd cmd = p_cmd;
+        CmdPacket::tp_constGenesisCmd cmd = p_cmd;
 
-        char freq_str[G59_ARG1_LENGTH+1];
-        memset(freq_str, 0, G59_ARG1_LENGTH+1);
-        snprintf(freq_str, G59_ARG1_LENGTH+1, "%08ld", freq);
-        for(int i=0; i< G59_ARG1_LENGTH; i++)
+        char freq_str[GENESIS_ARG1_LENGTH+1];
+        memset(freq_str, 0, GENESIS_ARG1_LENGTH+1);
+        snprintf(freq_str, GENESIS_ARG1_LENGTH+1, "%08ld", freq);
+        for(int i=0; i< GENESIS_ARG1_LENGTH; i++)
         {
             arg1[i] = freq_str[i];
         }
@@ -310,13 +310,13 @@ CmdBase::tGenesisErr CmdBase::private_set_freq(const long freq, const char* p_cm
             arg2[i+0x4]=regs[i];
         }
 
-        G59CmdPacket packet(cmd, arg1, arg2);
+        CmdPacket packet(cmd, arg1, arg2);
         packet.DumpPacket();
         #ifdef SIMULATE_USB_CONNECTION
         return OK;
         #endif
-        int nBytes = write_to_device(m_dev_handle, packet.GetPacket(), G59_PACKET_LEN);
-        if(G59_PACKET_LEN == nBytes)
+        int nBytes = write_to_device(m_dev_handle, packet.GetPacket(), GENESIS_PACKET_LEN);
+        if(GENESIS_PACKET_LEN == nBytes)
         {
            rtn = OK;
         }
@@ -344,7 +344,7 @@ CmdBase::tGenesisErr CmdBase::private_send_on_off_cmd(const bool on_off, const c
     CmdBase::tGenesisErr rtn = FAILED_TO_SEND;
     if (NULL != m_dev_handle)
     {
-        G59CmdPacket::tp_constG59Cmd cmd;
+        CmdPacket::tp_constGenesisCmd cmd;
         if (on_off)
         {
             cmd = p_on_cmd;
@@ -354,13 +354,13 @@ CmdBase::tGenesisErr CmdBase::private_send_on_off_cmd(const bool on_off, const c
             cmd = p_off_cmd;
         }
 
-        G59CmdPacket packet(cmd);
+        CmdPacket packet(cmd);
         packet.DumpPacket();
         #ifdef SIMULATE_USB_CONNECTION
         return OK;
         #endif
-        int nBytes = write_to_device(m_dev_handle, packet.GetPacket(), G59_PACKET_LEN);
-        if(G59_PACKET_LEN == nBytes)
+        int nBytes = write_to_device(m_dev_handle, packet.GetPacket(), GENESIS_PACKET_LEN);
+        if(GENESIS_PACKET_LEN == nBytes)
         {
            rtn = OK;
         }
@@ -402,22 +402,22 @@ CmdBase::tGenesisErr CmdBase::private_cmd_arg2only(const unsigned char arg, cons
     CmdBase::tGenesisErr rtn = FAILED_TO_SEND;
     if (NULL != m_dev_handle)
     {
-        char arg1[G59_ARG1_LENGTH];
-        memset(arg1, 0, G59_ARG1_LENGTH);
-        char arg2[G59_ARG2_LENGTH];
-        memset(arg2, 0, G59_ARG2_LENGTH);
+        char arg1[GENESIS_ARG1_LENGTH];
+        memset(arg1, 0, GENESIS_ARG1_LENGTH);
+        char arg2[GENESIS_ARG2_LENGTH];
+        memset(arg2, 0, GENESIS_ARG2_LENGTH);
 
-        G59CmdPacket::tp_constG59Cmd cmd = p_cmd;
+        CmdPacket::tp_constGenesisCmd cmd = p_cmd;
         arg2[0x04] = arg;
 
-        G59CmdPacket packet(cmd, arg1, arg2);
+        CmdPacket packet(cmd, arg1, arg2);
         packet.DumpPacket();
 
         #ifdef SIMULATE_USB_CONNECTION
         return OK;
         #endif
-        int nBytes = write_to_device(m_dev_handle, packet.GetPacket(), G59_PACKET_LEN);
-        if(G59_PACKET_LEN == nBytes)
+        int nBytes = write_to_device(m_dev_handle, packet.GetPacket(), GENESIS_PACKET_LEN);
+        if(GENESIS_PACKET_LEN == nBytes)
         {
            rtn = OK;
         }
@@ -545,7 +545,7 @@ const CmdBase::t_cmd_enum CmdBase::private_str2cmd(std::string cmd)
     return rtn;
 }
 
-CmdBase::t_tx_state CmdBase::private_handle_cmd(t_cmd_enum cmd, G59CmdPacket &packet)
+CmdBase::t_tx_state CmdBase::private_handle_cmd(t_cmd_enum cmd, CmdPacket &packet)
 {
     t_tx_state tx_state = TX_STATE_IGNORE;
 
@@ -768,12 +768,12 @@ static std::string private_trim_str(char* p_str)
     return private_trim(tmp);
 }
 
-CmdBase::t_cmd_enum CmdBase::private_parse_packet(G59CmdPacket &packet)
+CmdBase::t_cmd_enum CmdBase::private_parse_packet(CmdPacket &packet)
 {
     static t_cmd_enum last_cmd = NONE;
-    char rx_cmd_str[G59_COMMAND_LENGTH + 1] = {};
+    char rx_cmd_str[GENESIS_COMMAND_LENGTH + 1] = {};
 
-    rx_cmd_str[G59_COMMAND_LENGTH] = '\0';
+    rx_cmd_str[GENESIS_COMMAND_LENGTH] = '\0';
     packet.GetCmd(rx_cmd_str);
     t_cmd_enum cmd = private_str2cmd(private_trim_str(rx_cmd_str));
     return cmd;

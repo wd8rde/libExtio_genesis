@@ -105,9 +105,9 @@ protected:
     tGenesisErr private_set_freq(const long freq, const char* p_cmd);
     tGenesisErr private_send_on_off_cmd(const bool on_off, const char *p_on_cmd, const char *p_off_cmd);
     tGenesisErr private_cmd_arg2only(const unsigned char arg, const char *p_cmd);
-    t_cmd_enum private_parse_packet(G59CmdPacket &packet);
+    t_cmd_enum private_parse_packet(CmdPacket &packet);
     const t_cmd_enum private_str2cmd(std::string cmd);
-    t_tx_state private_handle_cmd(t_cmd_enum cmd, G59CmdPacket &packet);
+    t_tx_state private_handle_cmd(t_cmd_enum cmd, CmdPacket &packet);
 
     hid_handle m_dev_handle;
     pthread_t m_usb_read_thread;
