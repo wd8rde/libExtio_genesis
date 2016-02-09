@@ -40,7 +40,6 @@ public:
     int m_vendorid;
     int m_productid;
     bool m_initialized;
-    CmdBase m_g59cmd;
     static const BandFilters_t ms_bandfilters;
     bool m_hasMicPreamp;
     bool m_hasGPA10;
@@ -51,8 +50,8 @@ public:
     int m_current_filter;
     long m_current_freq;
     CSimpleIniA m_ini;
-
-
+protected:
+    CmdBase *mp_cmd;
 };
 
 class G59: public Genesis

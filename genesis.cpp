@@ -4,6 +4,8 @@
 
 #include "genesis.h"
 #include "cmdbase.h"
+#include "g59cmd.h"
+#include "g11cmd.h"
 #include "simpleini-master/SimpleIni.h"
 
 #define LOG_ERR(...) {fprintf(stderr,__VA_ARGS__);}
@@ -81,8 +83,7 @@ Genesis::Genesis(int productid)
     ,m_keyer_ratio(3.0)
     ,m_current_filter(0)
     ,m_current_freq(0)
-
-
+    ,mp_cmd(NULL)
 {
 }
 
@@ -96,7 +97,7 @@ Genesis::~Genesis()
 
 void Genesis::register_observer(Genesis_Observer *p_observer)
 {
-    m_g59cmd.register_observer(p_observer);
+    mp_cmd->register_observer(p_observer);
 }
 
 std::string Genesis::GetMake()
@@ -113,7 +114,7 @@ bool Genesis::Init()
 {
     if (!m_initialized)
     {
-        m_initialized = m_g59cmd.Init(m_vendorid, m_productid);
+        m_initialized = mp_cmd->Init(m_vendorid, m_productid);
     }
 
     LoadConfigFile();
@@ -124,7 +125,7 @@ bool Genesis::Init()
     m_ini.SetBoolValue("g59","hasMicPreamp",m_hasMicPreamp,"# true if Mic Preamp enabled", true);
 
     //enable the GPA10 if it is available
-    m_g59cmd.pa10(m_hasGPA10);
+    mp_cmd->pa10(m_hasGPA10);
 
     //setup the keyer
     m_keyer_ratio = m_ini.GetDoubleValue("g59", "keyerRatio",3.0, &hasmultiple);
@@ -134,13 +135,13 @@ bool Genesis::Init()
     m_keyer_mode = m_ini.GetLongValue("g59", "keyerMode",CmdBase::K_MODE_NONE, &hasmultiple);
     m_ini.SetLongValue("g59","keyerMode",m_keyer_mode,"# keyer mode code", true);
 
-    m_g59cmd.k_ratio(m_keyer_ratio);
-    m_g59cmd.k_speed(m_keyer_speed);
-    m_g59cmd.k_mode(m_keyer_mode);
+    mp_cmd->k_ratio(m_keyer_ratio);
+    mp_cmd->k_speed(m_keyer_speed);
+    mp_cmd->k_mode(m_keyer_mode);
 
     m_tx_dropout_ms = m_ini.GetLongValue("g59", "txDropoutMS", TX_DROPOUT_MS, &hasmultiple);
     m_ini.SetLongValue("g59","txDropoutMS",m_tx_dropout_ms,"# TX Dropout time in milliseconds", true);
-    m_g59cmd.set_tx_dropout_ms(m_tx_dropout_ms);
+    mp_cmd->set_tx_dropout_ms(m_tx_dropout_ms);
 
     return m_initialized;
 }
@@ -150,7 +151,7 @@ bool Genesis::Close()
     if (m_initialized)
     {
         SaveConfigFile();
-        m_initialized = !m_g59cmd.Close();
+        m_initialized = !mp_cmd->Close();
     }
 
     return m_initialized;
@@ -161,11 +162,11 @@ bool Genesis::SetLO(long freq)
     long smooth_amount = (m_current_freq * SMOOTH_RANGE)/1000000;
     if(smooth_amount >= (abs(freq - m_current_freq)))
     {
-        m_g59cmd.smooth(freq);
+        mp_cmd->smooth(freq);
     }
     else
     {
-        m_g59cmd.set_freq(freq);
+        mp_cmd->set_freq(freq);
         m_current_freq = freq;
     }
 }
@@ -176,7 +177,7 @@ bool Genesis::SetBand(long freq)
 
     if(m_current_filter != band_filter )
     {
-        m_g59cmd.set_filt(band_filter);
+        mp_cmd->set_filt(band_filter);
         m_current_filter = band_filter;
     }
 }
@@ -203,35 +204,35 @@ bool Genesis::SetTx(bool tx_enable)
         //enable the Mic Preamp if it is available
         if (m_hasMicPreamp)
         {
-            m_g59cmd.line_mic(true);
+            mp_cmd->line_mic(true);
         }
 
         //Start Transmitting
-        m_g59cmd.tx(true);
+        mp_cmd->tx(true);
         //Todo, there should be a tx time limit timer
     }
     else
     {
         //Stop Transmitting
-        m_g59cmd.tx(false);
+        mp_cmd->tx(false);
         //disable the Mic Preamp
-        m_g59cmd.line_mic(false);
+        mp_cmd->line_mic(false);
     }
 
     return true;
 }
 void Genesis::SetAtten(bool on)
 {
-    m_g59cmd.att(on);
+    mp_cmd->att(on);
 }
 void Genesis::SetRFPreamp(bool on)
 {
-    m_g59cmd.rf_preamp(on);
+    mp_cmd->rf_preamp(on);
 }
 
 void Genesis::SetWpm(int wpm)
 {
-    m_g59cmd.k_speed(wpm);
+    mp_cmd->k_speed(wpm);
 }
 
 bool Genesis::LoadConfigFile()
@@ -298,10 +299,16 @@ bool Genesis::SaveConfigFile()
 G59::G59() 
     : Genesis(0x1970)
 {
+    mp_cmd = new G59Cmd();
 };
 
 G59::~G59()
 {
+    if (NULL != mp_cmd)
+    {
+        delete mp_cmd;
+        mp_cmd = NULL;
+    }
 };
 
 int G59::GetProductId()
@@ -320,10 +327,16 @@ std::string G59::GetModel()
 G11::G11() 
     : Genesis(0x1971)
 {
+    mp_cmd = new G11Cmd();
 };
 
 G11::~G11()
 {
+    if (NULL != mp_cmd)
+    {
+        delete mp_cmd;
+        mp_cmd = NULL;
+    }
 };
 
 int G11::GetProductId()

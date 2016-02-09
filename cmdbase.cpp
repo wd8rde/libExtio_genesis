@@ -22,54 +22,17 @@
 #define TIMER_CLOCK_ID CLOCK_MONOTONIC
 #define TSPEC2LL(ts) (static_cast<long long>(ts.tv_sec*NSECS_IN_SEC) + ts.tv_nsec)
 
-
-typedef struct
-{
-    const CmdBase::t_cmd_enum cmd;
-    const char* cmd_str;
-}t_cmd2str;
-
-const t_cmd2str cmd2str[] =
-{
-    {CmdBase::NONE,"NONE"},
-    {CmdBase::SET_NAME,"SET_NAME"},
-    {CmdBase::SET_FREQ,"SET_FREQ"},
-    {CmdBase::SMOOTH,  "SMOOTH"},
-    {CmdBase::AF_ON,   "AF_ON"},
-    {CmdBase::AF_OFF,  "AF_OFF"},
-    {CmdBase::RF_ON,   "RF_ON"},
-    {CmdBase::RF_OFF,  "RF_OFF"},
-    {CmdBase::ATT_ON,  "ATT_ON"},
-    {CmdBase::ATT_OFF, "ATT_OFF"},
-    {CmdBase::MUTE_ON, "MUTE_ON"},
-    {CmdBase::MUTE_OFF,"MUTE_OFF"},
-    {CmdBase::TRV_ON,  "TRV_ON"},
-    {CmdBase::TRV_OFF, "TRV_OFF"},
-    {CmdBase::SET_FILT,"SET_FILT"},
-    {CmdBase::TX_ON,   "TX_ON"},
-    {CmdBase::TX_OFF,  "TX_OFF"},
-    {CmdBase::PA10_ON, "PA10_ON"},
-    {CmdBase::LINE_MIC,"LINE/MIC"},
-    {CmdBase::AUTO_COR,"AUTO_COR"},
-    {CmdBase::SEC_RX2, "SEC_RX2"},
-    {CmdBase::MONITOR, "MONITOR"},
-    {CmdBase::K_SPEED, "K_SPEED"},
-    {CmdBase::K_MODE,  "K_MODE"},
-    {CmdBase::K_RATIO, "K_RATIO"},
-    {CmdBase::DOT_ON,  "DOT_ON"},
-    {CmdBase::DOT_OFF, "DOT_OFF"},
-    {CmdBase::DASH_ON, "DASH_ON"},
-    {CmdBase::DASH_OFF,"DASH_OFF"},
-    {CmdBase::PWR_SWR, "PWR_SWR"},
-    {CmdBase::IDLE,"IDLE"}
-};
-
 const bool ON = true;
 const bool OFF = false;
 
 static const long long NSECS_IN_SEC = 1000000000;
 const long NSEC_PER_MILLISEC = 1000000;
 const long long DEFAULT_IDLE_TIMEOUT = 300 * NSEC_PER_MILLISEC;
+
+const CmdBase::t_cmdinfo CmdBase::cmdinfo[] =
+{
+    {CmdBase::NONE,"NONE"}
+};
 
 CmdBase::CmdBase()
     : m_dev_handle(NULL)
@@ -127,6 +90,11 @@ bool CmdBase::Close()
         m_dev_handle = NULL;
     }
     return rtn;
+}
+
+const CmdBase::t_cmdinfo CmdBase::get_cmd_info(CmdBase::t_cmd_enum cmd)
+{
+    return cmdinfo[NONE];
 }
 
 bool CmdBase::init_usb_read_thread()
@@ -232,7 +200,7 @@ void* CmdBase::usb_read_thread_func()
                     char arg2[GENESIS_ARG2_LENGTH];
                     memset(arg2, 0, GENESIS_ARG2_LENGTH);
                     CmdBase::t_cmd_enum cmd = TX_OFF;
-                    CmdPacket genesis_packet(cmd2str[cmd].cmd_str, arg1, arg2);
+                    CmdPacket genesis_packet(get_cmd_info(cmd).cmd_str, arg1, arg2);
                     private_handle_cmd(cmd, genesis_packet);
 
                     clock_gettime(TIMER_CLOCK_ID, &current_time);
@@ -251,7 +219,7 @@ CmdBase::tGenesisErr CmdBase::set_name(const char* name)
     CmdBase::tGenesisErr rtn = FAILED_TO_SEND;
     if (NULL != m_dev_handle)
     {
-        CmdPacket::tp_constGenesisCmd cmd = "SET_NAME";
+        CmdPacket::tp_constGenesisCmd cmd = get_cmd_info(SET_NAME).cmd_str;
         CmdPacket::tconstGenesisArg1 arg1 = "Genesis";
 
         CmdPacket packet(cmd, arg1);
@@ -301,7 +269,7 @@ CmdBase::tGenesisErr CmdBase::private_set_freq(const long freq, const char* p_cm
         si570_set_frequency(lo_freq, regs);
         if (smooth)
         {
-            cmd = "SMOOTH";
+            cmd = get_cmd_info(SMOOTH).cmd_str;
         }
 
         arg2[0x2]=0xaa; // set i2c address in first "register"
@@ -331,12 +299,12 @@ CmdBase::tGenesisErr CmdBase::private_set_freq(const long freq, const char* p_cm
 
 CmdBase::tGenesisErr CmdBase::set_freq(const long freq)
 {
-    return private_set_freq(freq, "SET_FREQ");
+    return private_set_freq(freq, get_cmd_info(SET_FREQ).cmd_str);
 }
 
 CmdBase::tGenesisErr CmdBase::smooth(const long freq)
 {
-    return private_set_freq(freq, "SMOOTH");
+    return private_set_freq(freq, get_cmd_info(SMOOTH).cmd_str);
 }
 
 CmdBase::tGenesisErr CmdBase::private_send_on_off_cmd(const bool on_off, const char *p_on_cmd, const char *p_off_cmd)
@@ -374,27 +342,27 @@ CmdBase::tGenesisErr CmdBase::private_send_on_off_cmd(const bool on_off, const c
 }
 CmdBase::tGenesisErr CmdBase::af_amp(const bool on_off)
 {
-    return private_send_on_off_cmd(on_off, "AF_ON", "AF_OFF");
+    return private_send_on_off_cmd(on_off, get_cmd_info(AF_ON).cmd_str, get_cmd_info(AF_OFF).cmd_str);
 }
 
 CmdBase::tGenesisErr CmdBase::rf_preamp(const bool on_off)
 {
-    return private_send_on_off_cmd(on_off, "RF_ON", "RF_OFF");
+    return private_send_on_off_cmd(on_off, get_cmd_info(RF_ON).cmd_str, get_cmd_info(RF_OFF).cmd_str);
 }
 
 CmdBase::tGenesisErr CmdBase::att(const bool on_off)
 {
-    return private_send_on_off_cmd(on_off, "ATT_ON", "ATT_OFF");
+    return private_send_on_off_cmd(on_off, get_cmd_info(ATT_ON).cmd_str, get_cmd_info(ATT_OFF).cmd_str);
 }
 
 CmdBase::tGenesisErr CmdBase::mute(const bool on_off)
 {
-    return private_send_on_off_cmd(on_off, "MUTE_ON", "MUTE_OFF");
+    return private_send_on_off_cmd(on_off, get_cmd_info(MUTE_ON).cmd_str, get_cmd_info(MUTE_OFF).cmd_str);
 }
 
 CmdBase::tGenesisErr CmdBase::trv(const bool on_off)
 {
-    return private_send_on_off_cmd(on_off, "TRV_ON", "TRV_OFF");
+    return private_send_on_off_cmd(on_off, get_cmd_info(TRV_ON).cmd_str, get_cmd_info(TRV_OFF).cmd_str);
 }
 
 CmdBase::tGenesisErr CmdBase::private_cmd_arg2only(const unsigned char arg, const char *p_cmd)
@@ -432,7 +400,7 @@ CmdBase::tGenesisErr CmdBase::private_cmd_arg2only(const unsigned char arg, cons
 
 CmdBase::tGenesisErr CmdBase::set_filt(const int fltr)
 {
-    return private_cmd_arg2only((fltr & 0xff),"SET_FILT");
+    return private_cmd_arg2only((fltr & 0xff), get_cmd_info(SET_FILT).cmd_str);
 }
 
 CmdBase::tGenesisErr CmdBase::tx(const bool on_off)
@@ -440,38 +408,38 @@ CmdBase::tGenesisErr CmdBase::tx(const bool on_off)
     tGenesisErr rtn = OK;
     if (on_off)
     {
-        rtn = private_cmd_arg2only(0x03,"TX_ON");
+        rtn = private_cmd_arg2only(0x03,get_cmd_info(TX_ON).cmd_str);
     }
     else
     {
-        rtn = private_cmd_arg2only(0x00,"TX_OFF");
+        rtn = private_cmd_arg2only(0x00,get_cmd_info(TX_OFF).cmd_str);
     }
     return rtn;
 }
 
 CmdBase::tGenesisErr CmdBase::pa10(const bool on_off)
 {
-    return private_cmd_arg2only(((on_off?0x01:0x00) & 0xff),"PA10_ON");
+    return private_cmd_arg2only(((on_off?0x01:0x00) & 0xff), get_cmd_info(PA10_ON).cmd_str);
 }
 
 CmdBase::tGenesisErr CmdBase::line_mic(const bool on_off)
 {
-    return private_cmd_arg2only(((on_off?0x01:0x00) & 0xff),"LINE/MIC");
+    return private_cmd_arg2only(((on_off?0x01:0x00) & 0xff), get_cmd_info(LINE_MIC).cmd_str);
 }
 
 CmdBase::tGenesisErr CmdBase::auto_cor(const bool on_off)
 {
-    return private_cmd_arg2only(((on_off?0x01:0x00) & 0xff),"AUTO_COR");
+    return private_cmd_arg2only(((on_off?0x01:0x00) & 0xff), get_cmd_info(AUTO_COR).cmd_str);
 }
 
 CmdBase::tGenesisErr CmdBase::sec_rx2(const bool on_off)
 {
-    return private_cmd_arg2only(((on_off?0x01:0x00) & 0xff),"SEC_RX2");
+    return private_cmd_arg2only(((on_off?0x01:0x00) & 0xff), get_cmd_info(SEC_RX2).cmd_str);
 }
 
 CmdBase::tGenesisErr CmdBase::monitor(const bool on_off)
 {
-    return private_cmd_arg2only(((on_off?0x01:0x00) & 0xff),"MONITOR");
+    return private_cmd_arg2only(((on_off?0x01:0x00) & 0xff), get_cmd_info(MONITOR).cmd_str);
 }
 
 CmdBase::tGenesisErr CmdBase::k_speed(const int wpm)
@@ -481,7 +449,7 @@ CmdBase::tGenesisErr CmdBase::k_speed(const int wpm)
         return BAD_ARG;
     }
     unsigned char divisor = (unsigned char)((520/wpm) & 0xff);
-    return private_cmd_arg2only(divisor, "K_SPEED");
+    return private_cmd_arg2only(divisor, get_cmd_info(K_SPEED).cmd_str);
 }
 
 CmdBase::tGenesisErr CmdBase::k_mode(const int mode)
@@ -516,7 +484,7 @@ CmdBase::tGenesisErr CmdBase::k_mode(const int mode)
         break;
     }
 
-    return private_cmd_arg2only((unsigned char)(mode_code & 0xff), "K_MODE");
+    return private_cmd_arg2only((unsigned char)(mode_code & 0xff), get_cmd_info(K_MODE).cmd_str);
 }
 
 CmdBase::tGenesisErr CmdBase::k_ratio(const double ratio)
@@ -527,7 +495,7 @@ CmdBase::tGenesisErr CmdBase::k_ratio(const double ratio)
     unsigned int ratio_tenths = static_cast<int>((tmp_ratio - 1.0) * 10.0);
     unsigned int ratio_code = 10 + ratio_tenths;
     
-    return private_cmd_arg2only((unsigned char)(ratio_code & 0xff), "K_RATIO");
+    return private_cmd_arg2only((unsigned char)(ratio_code & 0xff), get_cmd_info(K_RATIO).cmd_str);
 }
 
 const CmdBase::t_cmd_enum CmdBase::private_str2cmd(std::string cmd)
@@ -536,9 +504,9 @@ const CmdBase::t_cmd_enum CmdBase::private_str2cmd(std::string cmd)
     t_cmd_enum rtn = NONE;
     for(i = 0; LAST_CMD > i; i++)
     {
-        if(cmd == cmd2str[i].cmd_str)
+        if(cmd == get_cmd_info(static_cast<t_cmd_enum>(i)).cmd_str)
         {
-            rtn = cmd2str[i].cmd;
+            rtn = get_cmd_info(static_cast<t_cmd_enum>(i)).cmd;
             break;
         }
     }

@@ -58,6 +58,12 @@ public:
         LAST_CMD
     }t_cmd_enum;
 
+    typedef struct
+    {
+        const CmdBase::t_cmd_enum cmd;
+        const char* cmd_str;
+    }t_cmdinfo;
+
     typedef enum
     {
         K_MODE_NONE         = 0x00,
@@ -101,6 +107,8 @@ protected:
         TX_STATE_DROPPING = 2
     }t_tx_state;
 
+    virtual const t_cmdinfo get_cmd_info(CmdBase::t_cmd_enum cmd);
+
     bool init_usb_read_thread();
     tGenesisErr private_set_freq(const long freq, const char* p_cmd);
     tGenesisErr private_send_on_off_cmd(const bool on_off, const char *p_on_cmd, const char *p_off_cmd);
@@ -118,6 +126,7 @@ protected:
 
 private:
     static void* static_thread_func(void* p_data);
+    static const t_cmdinfo cmdinfo[];
 
 
 };
