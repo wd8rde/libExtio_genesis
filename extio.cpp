@@ -4,7 +4,7 @@
 #include "bsd_string.h"
 
 #include "genesis.h"
-#include "g59cmd.h"
+#include "cmdbase.h"
 #include "extio.h"
 
 #define LOG_ERR(...) {fprintf(stderr,__VA_ARGS__);}

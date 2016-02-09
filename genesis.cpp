@@ -3,7 +3,7 @@
 #include <fstream>
 
 #include "genesis.h"
-#include "g59cmd.h"
+#include "cmdbase.h"
 #include "simpleini-master/SimpleIni.h"
 
 #define LOG_ERR(...) {fprintf(stderr,__VA_ARGS__);}

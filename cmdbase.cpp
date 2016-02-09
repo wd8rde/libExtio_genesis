@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <time.h>
 
-#include "g59cmd.h"
+#include "cmdbase.h"
 #include "si570.h"
 
 #define LOG_ERR(...) {fprintf(stderr,__VA_ARGS__);fflush(stderr);}

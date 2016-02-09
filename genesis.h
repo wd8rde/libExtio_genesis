@@ -2,7 +2,7 @@
 #define GENESIS_SDR_H_
 #include <string>
 #include <vector>
-#include "g59cmd.h"
+#include "cmdbase.h"
 #include "simpleini-master/SimpleIni.h"
 
 class Genesis

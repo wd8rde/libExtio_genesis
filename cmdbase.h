@@ -1,5 +1,5 @@
-#ifndef G59CMD_H_
-#define G59CMD_H_
+#ifndef CMDBASE_H_
+#define CMDBASE_H_
 
 #include "hid_util.h"
 #include "g59cmdpacket.h"
@@ -121,4 +121,4 @@ private:
 
 
 };
-#endif /*G59CMD_H_*/
+#endif /*CMDBASE_H_*/
