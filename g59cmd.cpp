@@ -25,43 +25,43 @@
 
 typedef struct
 {
-    const G59Cmd::t_cmd_enum cmd;
+    const CmdBase::t_cmd_enum cmd;
     const char* cmd_str;
 }t_cmd2str;
 
 const t_cmd2str cmd2str[] =
 {
-    {G59Cmd::NONE,"NONE"},
-    {G59Cmd::SET_NAME,"SET_NAME"},
-    {G59Cmd::SET_FREQ,"SET_FREQ"},
-    {G59Cmd::SMOOTH,  "SMOOTH"},
-    {G59Cmd::AF_ON,   "AF_ON"},
-    {G59Cmd::AF_OFF,  "AF_OFF"},
-    {G59Cmd::RF_ON,   "RF_ON"},
-    {G59Cmd::RF_OFF,  "RF_OFF"},
-    {G59Cmd::ATT_ON,  "ATT_ON"},
-    {G59Cmd::ATT_OFF, "ATT_OFF"},
-    {G59Cmd::MUTE_ON, "MUTE_ON"},
-    {G59Cmd::MUTE_OFF,"MUTE_OFF"},
-    {G59Cmd::TRV_ON,  "TRV_ON"},
-    {G59Cmd::TRV_OFF, "TRV_OFF"},
-    {G59Cmd::SET_FILT,"SET_FILT"},
-    {G59Cmd::TX_ON,   "TX_ON"},
-    {G59Cmd::TX_OFF,  "TX_OFF"},
-    {G59Cmd::PA10_ON, "PA10_ON"},
-    {G59Cmd::LINE_MIC,"LINE/MIC"},
-    {G59Cmd::AUTO_COR,"AUTO_COR"},
-    {G59Cmd::SEC_RX2, "SEC_RX2"},
-    {G59Cmd::MONITOR, "MONITOR"},
-    {G59Cmd::K_SPEED, "K_SPEED"},
-    {G59Cmd::K_MODE,  "K_MODE"},
-    {G59Cmd::K_RATIO, "K_RATIO"},
-    {G59Cmd::DOT_ON,  "DOT_ON"},
-    {G59Cmd::DOT_OFF, "DOT_OFF"},
-    {G59Cmd::DASH_ON, "DASH_ON"},
-    {G59Cmd::DASH_OFF,"DASH_OFF"},
-    {G59Cmd::PWR_SWR, "PWR_SWR"},
-    {G59Cmd::IDLE,"IDLE"}
+    {CmdBase::NONE,"NONE"},
+    {CmdBase::SET_NAME,"SET_NAME"},
+    {CmdBase::SET_FREQ,"SET_FREQ"},
+    {CmdBase::SMOOTH,  "SMOOTH"},
+    {CmdBase::AF_ON,   "AF_ON"},
+    {CmdBase::AF_OFF,  "AF_OFF"},
+    {CmdBase::RF_ON,   "RF_ON"},
+    {CmdBase::RF_OFF,  "RF_OFF"},
+    {CmdBase::ATT_ON,  "ATT_ON"},
+    {CmdBase::ATT_OFF, "ATT_OFF"},
+    {CmdBase::MUTE_ON, "MUTE_ON"},
+    {CmdBase::MUTE_OFF,"MUTE_OFF"},
+    {CmdBase::TRV_ON,  "TRV_ON"},
+    {CmdBase::TRV_OFF, "TRV_OFF"},
+    {CmdBase::SET_FILT,"SET_FILT"},
+    {CmdBase::TX_ON,   "TX_ON"},
+    {CmdBase::TX_OFF,  "TX_OFF"},
+    {CmdBase::PA10_ON, "PA10_ON"},
+    {CmdBase::LINE_MIC,"LINE/MIC"},
+    {CmdBase::AUTO_COR,"AUTO_COR"},
+    {CmdBase::SEC_RX2, "SEC_RX2"},
+    {CmdBase::MONITOR, "MONITOR"},
+    {CmdBase::K_SPEED, "K_SPEED"},
+    {CmdBase::K_MODE,  "K_MODE"},
+    {CmdBase::K_RATIO, "K_RATIO"},
+    {CmdBase::DOT_ON,  "DOT_ON"},
+    {CmdBase::DOT_OFF, "DOT_OFF"},
+    {CmdBase::DASH_ON, "DASH_ON"},
+    {CmdBase::DASH_OFF,"DASH_OFF"},
+    {CmdBase::PWR_SWR, "PWR_SWR"},
+    {CmdBase::IDLE,"IDLE"}
 };
 
 const bool ON = true;
@@ -71,7 +71,7 @@ static const long long NSECS_IN_SEC = 1000000000;
 const long NSEC_PER_MILLISEC = 1000000;
 const long long DEFAULT_IDLE_TIMEOUT = 300 * NSEC_PER_MILLISEC;
 
-G59Cmd::G59Cmd()
+CmdBase::CmdBase()
     : m_dev_handle(NULL)
     , m_usb_read_thread_running(false)
     , mp_observer(NULL)
@@ -80,12 +80,12 @@ G59Cmd::G59Cmd()
     pthread_mutex_init(&m_usb_read_mutex, NULL);
 }
 
-G59Cmd::~G59Cmd()
+CmdBase::~CmdBase()
 {
     pthread_mutex_destroy(&m_usb_read_mutex);
 }
 
-bool G59Cmd::Init(int vendor_id, int product_id)
+bool CmdBase::Init(int vendor_id, int product_id)
 {
     LOG_INFO("%s:%d  vid:%x, pid:%x\n",__FUNCTION__,__LINE__,vendor_id,product_id);
     #ifdef SIMULATE_USB_CONNECTION
@@ -106,7 +106,7 @@ bool G59Cmd::Init(int vendor_id, int product_id)
     return rtn;
 }
 
-bool G59Cmd::Close()
+bool CmdBase::Close()
 {
     bool rtn = true;
     #ifdef SIMULATE_USB_CONNECTION
@@ -129,14 +129,14 @@ bool G59Cmd::Close()
     return rtn;
 }
 
-bool G59Cmd::init_usb_read_thread()
+bool CmdBase::init_usb_read_thread()
 {
     bool rtn = true;
 
     m_usb_read_thread_running = true;
     int rslt = pthread_create(&m_usb_read_thread, 
                               NULL /* pthread_attr_t *attr*/, 
-                              &G59Cmd::static_thread_func, 
+                              &CmdBase::static_thread_func, 
                               this);
     if (0 != rslt)
     {
@@ -147,19 +147,19 @@ bool G59Cmd::init_usb_read_thread()
     return rtn;
 }
 
-void* G59Cmd::static_thread_func(void* p_data)
+void* CmdBase::static_thread_func(void* p_data)
 {
     LOG_INFO("%s:%d Starting\n",__FUNCTION__,__LINE__);
     if(NULL != p_data)
     {
-        G59Cmd* p_inst = static_cast<G59Cmd*>(p_data);
+        CmdBase* p_inst = static_cast<CmdBase*>(p_data);
         p_inst->usb_read_thread_func();
     }
     LOG_INFO("%s:%d Exiting\n",__FUNCTION__,__LINE__);
     return NULL;
 }
 
-void* G59Cmd::usb_read_thread_func()
+void* CmdBase::usb_read_thread_func()
 {
     LOG_ANNOYING("%s:%d Entering thread loop\n",__FUNCTION__,__LINE__);
     struct timespec current_time;
@@ -185,11 +185,11 @@ void* G59Cmd::usb_read_thread_func()
             if(0 < rslt)
             {
                 G59CmdPacket g59_packet(reinterpret_cast<G59CmdPacket::tG59Packet>(rx_packet));
-                G59Cmd::t_cmd_enum cmd = private_parse_packet(g59_packet);
+                CmdBase::t_cmd_enum cmd = private_parse_packet(g59_packet);
                 if (cmd != last_cmd)
                 {
                     // handle_cmd returns true if tx active
-                    G59Cmd::t_tx_state tx_state = private_handle_cmd(cmd, g59_packet);
+                    CmdBase::t_tx_state tx_state = private_handle_cmd(cmd, g59_packet);
                     switch (tx_state)
                     {
                     case TX_STATE_ON:
@@ -231,7 +231,7 @@ void* G59Cmd::usb_read_thread_func()
                     memset(arg1, 0, G59_ARG1_LENGTH);
                     char arg2[G59_ARG2_LENGTH];
                     memset(arg2, 0, G59_ARG2_LENGTH);
-                    G59Cmd::t_cmd_enum cmd = TX_OFF;
+                    CmdBase::t_cmd_enum cmd = TX_OFF;
                     G59CmdPacket g59_packet(cmd2str[cmd].cmd_str, arg1, arg2);
                     private_handle_cmd(cmd, g59_packet);
 
@@ -246,9 +246,9 @@ void* G59Cmd::usb_read_thread_func()
     return NULL;
 }
 
-G59Cmd::tG59Err G59Cmd::set_name(const char* name)
+CmdBase::tGenesisErr CmdBase::set_name(const char* name)
 {
-    G59Cmd::tG59Err rtn = FAILED_TO_SEND;
+    CmdBase::tGenesisErr rtn = FAILED_TO_SEND;
     if (NULL != m_dev_handle)
     {
         G59CmdPacket::tp_constG59Cmd cmd = "SET_NAME";
@@ -273,9 +273,9 @@ G59Cmd::tG59Err G59Cmd::set_name(const char* name)
     return rtn;
 }
 
-G59Cmd::tG59Err G59Cmd::private_set_freq(const long freq, const char* p_cmd)
+CmdBase::tGenesisErr CmdBase::private_set_freq(const long freq, const char* p_cmd)
 {
-    G59Cmd::tG59Err rtn = FAILED_TO_SEND;
+    CmdBase::tGenesisErr rtn = FAILED_TO_SEND;
     if (NULL != m_dev_handle)
     {
         bool smooth = false;
@@ -329,19 +329,19 @@ G59Cmd::tG59Err G59Cmd::private_set_freq(const long freq, const char* p_cmd)
     return rtn;
 }
 
-G59Cmd::tG59Err G59Cmd::set_freq(const long freq)
+CmdBase::tGenesisErr CmdBase::set_freq(const long freq)
 {
     return private_set_freq(freq, "SET_FREQ");
 }
 
-G59Cmd::tG59Err G59Cmd::smooth(const long freq)
+CmdBase::tGenesisErr CmdBase::smooth(const long freq)
 {
     return private_set_freq(freq, "SMOOTH");
 }
 
-G59Cmd::tG59Err G59Cmd::private_send_on_off_cmd(const bool on_off, const char *p_on_cmd, const char *p_off_cmd)
+CmdBase::tGenesisErr CmdBase::private_send_on_off_cmd(const bool on_off, const char *p_on_cmd, const char *p_off_cmd)
 {
-    G59Cmd::tG59Err rtn = FAILED_TO_SEND;
+    CmdBase::tGenesisErr rtn = FAILED_TO_SEND;
     if (NULL != m_dev_handle)
     {
         G59CmdPacket::tp_constG59Cmd cmd;
@@ -372,34 +372,34 @@ G59Cmd::tG59Err G59Cmd::private_send_on_off_cmd(const bool on_off, const char *p
 
     return rtn;
 }
-G59Cmd::tG59Err G59Cmd::af_amp(const bool on_off)
+CmdBase::tGenesisErr CmdBase::af_amp(const bool on_off)
 {
     return private_send_on_off_cmd(on_off, "AF_ON", "AF_OFF");
 }
 
-G59Cmd::tG59Err G59Cmd::rf_preamp(const bool on_off)
+CmdBase::tGenesisErr CmdBase::rf_preamp(const bool on_off)
 {
     return private_send_on_off_cmd(on_off, "RF_ON", "RF_OFF");
 }
 
-G59Cmd::tG59Err G59Cmd::att(const bool on_off)
+CmdBase::tGenesisErr CmdBase::att(const bool on_off)
 {
     return private_send_on_off_cmd(on_off, "ATT_ON", "ATT_OFF");
 }
 
-G59Cmd::tG59Err G59Cmd::mute(const bool on_off)
+CmdBase::tGenesisErr CmdBase::mute(const bool on_off)
 {
     return private_send_on_off_cmd(on_off, "MUTE_ON", "MUTE_OFF");
 }
 
-G59Cmd::tG59Err G59Cmd::trv(const bool on_off)
+CmdBase::tGenesisErr CmdBase::trv(const bool on_off)
 {
     return private_send_on_off_cmd(on_off, "TRV_ON", "TRV_OFF");
 }
 
-G59Cmd::tG59Err G59Cmd::private_cmd_arg2only(const unsigned char arg, const char *p_cmd)
+CmdBase::tGenesisErr CmdBase::private_cmd_arg2only(const unsigned char arg, const char *p_cmd)
 {
-    G59Cmd::tG59Err rtn = FAILED_TO_SEND;
+    CmdBase::tGenesisErr rtn = FAILED_TO_SEND;
     if (NULL != m_dev_handle)
     {
         char arg1[G59_ARG1_LENGTH];
@@ -430,14 +430,14 @@ G59Cmd::tG59Err G59Cmd::private_cmd_arg2only(const unsigned char arg, const char
     return rtn;
 }
 
-G59Cmd::tG59Err G59Cmd::set_filt(const int fltr)
+CmdBase::tGenesisErr CmdBase::set_filt(const int fltr)
 {
     return private_cmd_arg2only((fltr & 0xff),"SET_FILT");
 }
 
-G59Cmd::tG59Err G59Cmd::tx(const bool on_off)
+CmdBase::tGenesisErr CmdBase::tx(const bool on_off)
 {
-    tG59Err rtn = OK;
+    tGenesisErr rtn = OK;
     if (on_off)
     {
         rtn = private_cmd_arg2only(0x03,"TX_ON");
@@ -449,32 +449,32 @@ G59Cmd::tG59Err G59Cmd::tx(const bool on_off)
     return rtn;
 }
 
-G59Cmd::tG59Err G59Cmd::pa10(const bool on_off)
+CmdBase::tGenesisErr CmdBase::pa10(const bool on_off)
 {
     return private_cmd_arg2only(((on_off?0x01:0x00) & 0xff),"PA10_ON");
 }
 
-G59Cmd::tG59Err G59Cmd::line_mic(const bool on_off)
+CmdBase::tGenesisErr CmdBase::line_mic(const bool on_off)
 {
     return private_cmd_arg2only(((on_off?0x01:0x00) & 0xff),"LINE/MIC");
 }
 
-G59Cmd::tG59Err G59Cmd::auto_cor(const bool on_off)
+CmdBase::tGenesisErr CmdBase::auto_cor(const bool on_off)
 {
     return private_cmd_arg2only(((on_off?0x01:0x00) & 0xff),"AUTO_COR");
 }
 
-G59Cmd::tG59Err G59Cmd::sec_rx2(const bool on_off)
+CmdBase::tGenesisErr CmdBase::sec_rx2(const bool on_off)
 {
     return private_cmd_arg2only(((on_off?0x01:0x00) & 0xff),"SEC_RX2");
 }
 
-G59Cmd::tG59Err G59Cmd::monitor(const bool on_off)
+CmdBase::tGenesisErr CmdBase::monitor(const bool on_off)
 {
     return private_cmd_arg2only(((on_off?0x01:0x00) & 0xff),"MONITOR");
 }
 
-G59Cmd::tG59Err G59Cmd::k_speed(const int wpm)
+CmdBase::tGenesisErr CmdBase::k_speed(const int wpm)
 {
     if ((7 > wpm)||(128 < wpm))
     {
@@ -484,7 +484,7 @@ G59Cmd::tG59Err G59Cmd::k_speed(const int wpm)
     return private_cmd_arg2only(divisor, "K_SPEED");
 }
 
-G59Cmd::tG59Err G59Cmd::k_mode(const int mode)
+CmdBase::tGenesisErr CmdBase::k_mode(const int mode)
 {
     unsigned char mode_code = 0x01;
     switch (mode)
@@ -519,7 +519,7 @@ G59Cmd::tG59Err G59Cmd::k_mode(const int mode)
     return private_cmd_arg2only((unsigned char)(mode_code & 0xff), "K_MODE");
 }
 
-G59Cmd::tG59Err G59Cmd::k_ratio(const double ratio)
+CmdBase::tGenesisErr CmdBase::k_ratio(const double ratio)
 {
     double tmp_ratio = ratio;
     if(10.0 < tmp_ratio) tmp_ratio = 10.0;
@@ -530,7 +530,7 @@ G59Cmd::tG59Err G59Cmd::k_ratio(const double ratio)
     return private_cmd_arg2only((unsigned char)(ratio_code & 0xff), "K_RATIO");
 }
 
-const G59Cmd::t_cmd_enum G59Cmd::private_str2cmd(std::string cmd)
+const CmdBase::t_cmd_enum CmdBase::private_str2cmd(std::string cmd)
 {
     int i = 0;
     t_cmd_enum rtn = NONE;
@@ -545,7 +545,7 @@ const G59Cmd::t_cmd_enum G59Cmd::private_str2cmd(std::string cmd)
     return rtn;
 }
 
-G59Cmd::t_tx_state G59Cmd::private_handle_cmd(t_cmd_enum cmd, G59CmdPacket &packet)
+CmdBase::t_tx_state CmdBase::private_handle_cmd(t_cmd_enum cmd, G59CmdPacket &packet)
 {
     t_tx_state tx_state = TX_STATE_IGNORE;
 
@@ -768,7 +768,7 @@ static std::string private_trim_str(char* p_str)
     return private_trim(tmp);
 }
 
-G59Cmd::t_cmd_enum G59Cmd::private_parse_packet(G59CmdPacket &packet)
+CmdBase::t_cmd_enum CmdBase::private_parse_packet(G59CmdPacket &packet)
 {
     static t_cmd_enum last_cmd = NONE;
     char rx_cmd_str[G59_COMMAND_LENGTH + 1] = {};
@@ -779,12 +779,12 @@ G59Cmd::t_cmd_enum G59Cmd::private_parse_packet(G59CmdPacket &packet)
     return cmd;
 }
 
-void G59Cmd::set_tx_dropout_ms(unsigned long tx_dropout_ms)
+void CmdBase::set_tx_dropout_ms(unsigned long tx_dropout_ms)
 {
     m_tx_dropout_timeout_ns = tx_dropout_ms * NSEC_PER_MILLISEC;
 }
 
-void G59Cmd::register_observer(Genesis_Observer *p_observer)
+void CmdBase::register_observer(Genesis_Observer *p_observer)
 {
     LOG_INFO("%s:%d p_observer=%p\n",__FUNCTION__,__LINE__,p_observer);
     mp_observer = p_observer;

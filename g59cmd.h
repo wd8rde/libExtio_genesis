@@ -5,7 +5,7 @@
 #include "g59cmdpacket.h"
 #include "genesis_observer.h"
 
-class G59Cmd
+class CmdBase
 {
 public:
     typedef enum
@@ -13,14 +13,14 @@ public:
         OK,
         FAILED_TO_SEND,
         BAD_ARG
-    } tG59Err;
+    } tGenesisErr;
 
 
-    typedef struct tG59ThreadData
+    typedef struct tGenesisThreadData
     {
-      G59Cmd* p_instance;
+      CmdBase* p_instance;
       // someday, may want to expand this
-    } tG59ThreadData;
+    } tGenesisThreadData;
 
     typedef enum
     {
@@ -67,29 +67,29 @@ public:
     }t_k_mode;
 
 public:
-    G59Cmd();
-    virtual ~G59Cmd();
+    CmdBase();
+    virtual ~CmdBase();
     void register_observer(Genesis_Observer *p_observer);
     bool Init(int vendor_id, int product_id);
     bool Close();
-    tG59Err set_name(const char* name);
-    tG59Err set_freq(const long freq);
-    tG59Err smooth(const long  freq);
-    tG59Err set_filt(const int fltr);
-    tG59Err af_amp(const bool on_off);
-    tG59Err rf_preamp(const bool on_off);
-    tG59Err att(const bool on_off);
-    tG59Err mute(const bool on_off);
-    tG59Err trv(const bool on_off);
-    tG59Err tx(const bool on_off);
-    tG59Err k_speed(const int wpm);
-    tG59Err k_mode(const int mode);
-    tG59Err k_ratio(const double ratio);
-    tG59Err pa10(const bool on_off);
-    tG59Err line_mic(const bool on_off);
-    tG59Err auto_cor(const bool on_off);
-    tG59Err sec_rx2(const bool on_off);
-    tG59Err monitor(const bool on_off);
+    tGenesisErr set_name(const char* name);
+    tGenesisErr set_freq(const long freq);
+    tGenesisErr smooth(const long  freq);
+    tGenesisErr set_filt(const int fltr);
+    tGenesisErr af_amp(const bool on_off);
+    tGenesisErr rf_preamp(const bool on_off);
+    tGenesisErr att(const bool on_off);
+    tGenesisErr mute(const bool on_off);
+    tGenesisErr trv(const bool on_off);
+    tGenesisErr tx(const bool on_off);
+    tGenesisErr k_speed(const int wpm);
+    tGenesisErr k_mode(const int mode);
+    tGenesisErr k_ratio(const double ratio);
+    tGenesisErr pa10(const bool on_off);
+    tGenesisErr line_mic(const bool on_off);
+    tGenesisErr auto_cor(const bool on_off);
+    tGenesisErr sec_rx2(const bool on_off);
+    tGenesisErr monitor(const bool on_off);
     void* usb_read_thread_func();
     void set_tx_dropout_ms(unsigned long tx_dropout_ms);
 
@@ -102,9 +102,9 @@ protected:
     }t_tx_state;
 
     bool init_usb_read_thread();
-    tG59Err private_set_freq(const long freq, const char* p_cmd);
-    tG59Err private_send_on_off_cmd(const bool on_off, const char *p_on_cmd, const char *p_off_cmd);
-    tG59Err private_cmd_arg2only(const unsigned char arg, const char *p_cmd);
+    tGenesisErr private_set_freq(const long freq, const char* p_cmd);
+    tGenesisErr private_send_on_off_cmd(const bool on_off, const char *p_on_cmd, const char *p_off_cmd);
+    tGenesisErr private_cmd_arg2only(const unsigned char arg, const char *p_cmd);
     t_cmd_enum private_parse_packet(G59CmdPacket &packet);
     const t_cmd_enum private_str2cmd(std::string cmd);
     t_tx_state private_handle_cmd(t_cmd_enum cmd, G59CmdPacket &packet);

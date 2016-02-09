@@ -40,7 +40,7 @@ public:
     int m_vendorid;
     int m_productid;
     bool m_initialized;
-    G59Cmd m_g59cmd;
+    CmdBase m_g59cmd;
     static const BandFilters_t ms_bandfilters;
     bool m_hasMicPreamp;
     bool m_hasGPA10;

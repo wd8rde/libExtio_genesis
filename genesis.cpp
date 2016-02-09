@@ -76,7 +76,7 @@ Genesis::Genesis(int productid)
     ,m_hasMicPreamp(true)
     ,m_hasGPA10(true)
     ,m_tx_dropout_ms(0)
-    ,m_keyer_mode(G59Cmd::K_MODE_NONE)
+    ,m_keyer_mode(CmdBase::K_MODE_NONE)
     ,m_keyer_speed(13)
     ,m_keyer_ratio(3.0)
     ,m_current_filter(0)
@@ -131,7 +131,7 @@ bool Genesis::Init()
     m_ini.SetDoubleValue("g59","keyerRatio",m_keyer_ratio,"# keyer weight 1:ratio", true);
     m_keyer_speed = m_ini.GetLongValue("g59", "keyerSpeed",13, &hasmultiple);
     m_ini.SetLongValue("g59","keyerSpeed",m_keyer_speed,"# keyer speed in wpm", true);
-    m_keyer_mode = m_ini.GetLongValue("g59", "keyerMode",G59Cmd::K_MODE_NONE, &hasmultiple);
+    m_keyer_mode = m_ini.GetLongValue("g59", "keyerMode",CmdBase::K_MODE_NONE, &hasmultiple);
     m_ini.SetLongValue("g59","keyerMode",m_keyer_mode,"# keyer mode code", true);
 
     m_g59cmd.k_ratio(m_keyer_ratio);
