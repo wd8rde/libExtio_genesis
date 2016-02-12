@@ -4,7 +4,7 @@
 #include "bsd_string.h"
 
 #include "genesis.h"
-#include "g59cmd.h"
+#include "cmdbase.h"
 #include "extio.h"
 
 #define LOG_ERR(...) {fprintf(stderr,__VA_ARGS__);}
@@ -23,9 +23,6 @@
 #define LOG_ANNOYING(...) {}
 #endif
 
-
-static G59 m_g59;
-static G11 m_g11;
 static Genesis *mp_genesis = NULL;
 
 static char m_name_str[256];
@@ -143,23 +140,45 @@ bool InitHW(char *name, char *model, int& type)
     type = 0;
     name = NULL;
     model = NULL;
-    if (rtn = m_g59.Init())
+
+    //try G59
+    mp_genesis =  new G59();
+    if (rtn = mp_genesis->Init())
     {
-        mp_genesis = &m_g59;
-        strlcpy(m_name_str, m_g59.GetMake().c_str(), sizeof(m_name_str));
-        strlcpy(m_model_str, m_g59.GetMake().c_str(), sizeof(m_model_str));
+        strlcpy(m_name_str, mp_genesis->GetMake().c_str(), sizeof(m_name_str));
+        strlcpy(m_model_str, mp_genesis->GetMake().c_str(), sizeof(m_model_str));
         name = m_name_str;
         model = m_model_str;
         type = 4;
     }
-    else if (rtn = m_g11.Init())
+    else
     {
-        mp_genesis = &m_g11;
-        strlcpy(m_name_str, m_g11.GetMake().c_str(), sizeof(m_name_str));
-        strlcpy(m_model_str, m_g11.GetMake().c_str(), sizeof(m_model_str));
-        name = m_name_str;
-        model = m_model_str;
-        type = 4;
+        //get rid of G59 instance
+        if (NULL != mp_genesis)
+        {
+            delete mp_genesis;
+            mp_genesis = NULL;
+        }
+
+        //try G11
+        mp_genesis =  new G11();
+        if (rtn = mp_genesis->Init())
+        {
+            strlcpy(m_name_str, mp_genesis->GetMake().c_str(), sizeof(m_name_str));
+            strlcpy(m_model_str, mp_genesis->GetMake().c_str(), sizeof(m_model_str));
+            name = m_name_str;
+            model = m_model_str;
+            type = 4;
+        }
+        else
+        {
+            //get rid of G11 instance
+            if (NULL != mp_genesis)
+            {
+                delete mp_genesis;
+                mp_genesis = NULL;
+            }
+        }
     }
 
     if (NULL != mp_genesis)
@@ -180,6 +199,7 @@ void CloseHW()
     if(NULL != mp_genesis)
     {
         mp_genesis->Close();
+        delete mp_genesis;
         mp_genesis = NULL;
     }
 }

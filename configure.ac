@@ -6,7 +6,7 @@ AC_INIT(extio_genesis, new, [wd8rde@gmail.com>])
 #AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 #AM_INIT_AUTOMAKE([-Werror foreign])
 AM_INIT_AUTOMAKE([])
-AC_CONFIG_SRCDIR([g59cmd.cpp])
+AC_CONFIG_SRCDIR([genesis.cpp])
 #AC_CONFIG_HEADER([config.h])
 
 AC_CANONICAL_HOST

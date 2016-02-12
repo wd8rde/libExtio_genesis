@@ -1,14 +1,14 @@
-#ifndef G59CMD_H_
-#define G59CMD_H_
+#ifndef G11CMD_H_
+#define G11CMD_H_
 
 #include "cmdbase.h"
 
-class G59Cmd : public CmdBase
+class G11Cmd : public CmdBase
 {
     public:
 
-        G59Cmd() {};
-        virtual ~G59Cmd() {};
+        G11Cmd() {};
+        virtual ~G11Cmd() {};
         virtual const CmdBase::t_cmdinfo get_cmd_info(CmdBase::t_cmd_enum cmd)
         {
             return cmdinfo[cmd];
@@ -18,7 +18,7 @@ class G59Cmd : public CmdBase
         static const CmdBase::t_cmdinfo cmdinfo[];
 };
 
-const CmdBase::t_cmdinfo G59Cmd::cmdinfo[] =
+const CmdBase::t_cmdinfo G11Cmd::cmdinfo[] =
 {
     {CmdBase::NONE,"NONE"},
     {CmdBase::SET_NAME,"SET_NAME"},
@@ -34,7 +34,7 @@ const CmdBase::t_cmdinfo G59Cmd::cmdinfo[] =
     {CmdBase::MUTE_OFF,"MUTE_OFF"},
     {CmdBase::TRV_ON,  "TRV_ON"},
     {CmdBase::TRV_OFF, "TRV_OFF"},
-    {CmdBase::SET_FILT,"SET_FILT"},
+    {CmdBase::SET_FILT,"B_FILTER"},
     {CmdBase::TX_ON,   "TX_ON"},
     {CmdBase::TX_OFF,  "TX_OFF"},
     {CmdBase::PA10_ON, "PA10_ON"},
@@ -53,4 +53,4 @@ const CmdBase::t_cmdinfo G59Cmd::cmdinfo[] =
     {CmdBase::IDLE,"IDLE"}
 };
 
-#endif /* G59CMD_H_ */
+#endif /* G11CMD_H_ */
