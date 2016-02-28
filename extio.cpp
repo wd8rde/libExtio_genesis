@@ -10,6 +10,7 @@
 #define LOG_ERR(...) {fprintf(stderr,__VA_ARGS__);}
 #define LOG_INFO(...) {fprintf(stderr,__VA_ARGS__);}
 
+#define DEBUG
 #ifdef DEBUG
 #define LOG_DEBUG(...) {fprintf(stderr,__VA_ARGS__);}
 #else
@@ -25,8 +26,6 @@
 
 static Genesis *mp_genesis = NULL;
 
-static char m_name_str[256];
-static char m_model_str[256];
 static char m_mode = '\0';
 static long m_tune_freq = 1800000;
 static long m_lo_freq = 1800000;
@@ -132,23 +131,26 @@ void TuneChanged(long freq);
 void ShowGUI()
 {
     LOG_DEBUG("%s:%d\n",__FUNCTION__,__LINE__);
+    if(NULL != mp_genesis)
+    {
+        LOG_DEBUG("%s:%d\n",__FUNCTION__,__LINE__);
+        mp_genesis->ShowGUI();
+    }
+    LOG_DEBUG("%s:%d\n",__FUNCTION__,__LINE__);
 }
+
 bool InitHW(char *name, char *model, int& type)
 {
     fprintf(stderr,"%s:%d\n",__FUNCTION__,__LINE__);
     bool rtn = false;
     type = 0;
-    name = NULL;
-    model = NULL;
 
     //try G59
     mp_genesis =  new G59();
     if (rtn = mp_genesis->Init())
     {
-        strlcpy(m_name_str, mp_genesis->GetMake().c_str(), sizeof(m_name_str));
-        strlcpy(m_model_str, mp_genesis->GetMake().c_str(), sizeof(m_model_str));
-        name = m_name_str;
-        model = m_model_str;
+        strlcpy(name, mp_genesis->GetMake().c_str(), 15);
+        strlcpy(model, mp_genesis->GetMake().c_str(), 15);
         type = 4;
     }
     else
@@ -164,10 +166,8 @@ bool InitHW(char *name, char *model, int& type)
         mp_genesis =  new G11();
         if (rtn = mp_genesis->Init())
         {
-            strlcpy(m_name_str, mp_genesis->GetMake().c_str(), sizeof(m_name_str));
-            strlcpy(m_model_str, mp_genesis->GetMake().c_str(), sizeof(m_model_str));
-            name = m_name_str;
-            model = m_model_str;
+            strlcpy(name, mp_genesis->GetMake().c_str(), 15);
+            strlcpy(model, mp_genesis->GetMake().c_str(), 15);
             type = 4;
         }
         else

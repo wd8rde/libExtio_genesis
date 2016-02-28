@@ -37,6 +37,9 @@ public:
 
     bool LoadConfigFile();
     bool SaveConfigFile();
+    void ShowGUI();
+    void HideGUI();
+
     int m_vendorid;
     int m_productid;
     bool m_initialized;

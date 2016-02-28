@@ -7,9 +7,25 @@
 #include "g59cmd.h"
 #include "g11cmd.h"
 #include "simpleini-master/SimpleIni.h"
+#include "wx_settings/genesisgui.h"
 
 #define LOG_ERR(...) {fprintf(stderr,__VA_ARGS__);}
 #define LOG_INFO(...) //{fprintf(stderr,__VA_ARGS__);}
+
+#define DEBUG
+#ifdef DEBUG
+#define LOG_DEBUG(...) {fprintf(stderr,__VA_ARGS__);}
+#else
+#define LOG_DEBUG(...) {}
+#endif
+
+//#define DO_ANNOYING
+#ifdef DO_ANNOYING
+#define LOG_ANNOYING(...) {fprintf(stderr,__VA_ARGS__);fflush(stderr);}
+#else
+#define LOG_ANNOYING(...) {}
+#endif
+
 /**************************************************************/
 /** Base Class Genesis
 /**************************************************************/
@@ -291,6 +307,15 @@ bool Genesis::SaveConfigFile()
         LOG_ERR("%s:%d Failed to open %s for writing\n",__FUNCTION__,__LINE__,inifilepath.c_str());
     }
     return rtn;
+}
+void Genesis::ShowGUI()
+{
+    LOG_DEBUG("%s:%d\n",__FUNCTION__,__LINE__);
+    show_gui();
+    LOG_DEBUG("%s:%d\n",__FUNCTION__,__LINE__);
+}
+void Genesis::HideGUI()
+{
 }
 
 /**************************************************************/

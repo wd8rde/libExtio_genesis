@@ -1,6 +1,6 @@
 #!/bin/sh
 libtoolize
-aclocal
+aclocal --install
 autoconf
 touch NEWS README AUTHORS ChangeLog
 automake -a
