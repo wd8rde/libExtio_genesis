@@ -34,13 +34,16 @@ public:
     void SetAtten(bool on);
     void SetRFPreamp(bool on);
     void SetWpm(int wpm);
+    void EnableLineMic(bool onoff);
+    void EnablePA10(bool onoff);
+    void SetKeyerRatio(float ratio_dot_to_dash);
+    void SetKeyerMode(int keyer_mode);
 
     bool LoadConfigFile();
     bool SaveConfigFile();
     int m_vendorid;
     int m_productid;
     bool m_initialized;
-    static const BandFilters_t ms_bandfilters;
     bool m_hasMicPreamp;
     bool m_hasGPA10;
     unsigned long m_tx_dropout_ms;
@@ -52,6 +55,7 @@ public:
     CSimpleIniA m_ini;
 protected:
     CmdBase *mp_cmd;
+    BandFilters_t m_bandfilters;
 };
 
 class G59: public Genesis
@@ -61,6 +65,7 @@ public:
     virtual ~G59();
     virtual int GetProductId();
     virtual std::string GetModel();
+    static const BandFilters_t ms_g59_bandfilters;
 };
 
 class G11: public Genesis
@@ -70,5 +75,6 @@ public:
     virtual ~G11();
     virtual int GetProductId();
     virtual std::string GetModel();
+    static const BandFilters_t ms_g11_bandfilters;
 };
 #endif /*GENESIS_SDR_H_*/
