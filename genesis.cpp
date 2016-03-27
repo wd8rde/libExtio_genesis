@@ -15,58 +15,6 @@
 /**************************************************************/
 
 #define SMOOTH_RANGE 3500 //Smooth tuning range for si570 in ppm
-const Genesis::BandFilters_t Genesis::ms_bandfilters(
-{
-    { 
-        1,
-        "160m",
-        1800000,
-        2000000
-    },
-
-    { 
-        2,
-        "80m",
-        3500000,
-        4000000
-    },
-    { 
-        3,
-        "60-40m",
-        5403500,
-        7300000
-    },
-    { 
-        4,
-        "30-20m",
-        10100000,
-        14350000
-    },
-    { 
-        5,
-        "17-15m",
-        18068000,
-        21450000
-    },
-    { 
-        6,
-        "12-10m",
-        24890000,
-        29700000
-    },
-    { 
-        7,
-        "6m",
-        50000000,
-        54000000
-    },
-    { 
-        0,
-        "gen",
-        0,
-        1024000000
-    }
-});
 
 static const char* INIFILENAME = ".genesis-sdr.ini";
 static const unsigned long TX_DROPOUT_MS = 300;
@@ -185,7 +133,7 @@ bool Genesis::SetBand(long freq)
 int Genesis::FindBand(long freq)
 {
     int index = 0;
-    for(BandFilters_t::const_iterator it = ms_bandfilters.begin(); it != ms_bandfilters.end(); it++ )
+    for(BandFilters_t::const_iterator it = m_bandfilters.begin(); it != m_bandfilters.end(); it++ )
     {
         if((it->low_freq <= freq) && (it->high_freq >= freq))
         {
@@ -230,9 +178,65 @@ void Genesis::SetRFPreamp(bool on)
     mp_cmd->rf_preamp(on);
 }
 
+void Genesis::EnableLineMic(bool onoff)
+{
+    if(onoff)
+    {
+        m_hasMicPreamp = true;
+        m_ini.SetBoolValue("g59","hasMicPreamp",m_hasMicPreamp,"# true if Mic Preamp enabled", true);
+    }
+    else
+    {
+        m_hasMicPreamp = true;
+        m_ini.SetBoolValue("g59","hasMicPreamp",m_hasMicPreamp,"# true if Mic Preamp enabled", true);
+    }
+}
+
+void Genesis::EnablePA10(bool onoff)
+{
+    if(onoff)
+    {
+        m_hasGPA10 = true;
+        m_ini.SetBoolValue("g59","hasGPA10",m_hasGPA10,"# true if PA10 enabled", true);
+    }
+    else
+    {
+        m_hasGPA10 = false;
+        m_ini.SetBoolValue("g59","hasGPA10",m_hasGPA10,"# true if PA10 enabled", true);
+    }
+    if(NULL != mp_cmd)
+    {
+        mp_cmd->pa10(m_hasGPA10);
+    }
+}
 void Genesis::SetWpm(int wpm)
 {
-    mp_cmd->k_speed(wpm);
+    m_keyer_speed = wpm;
+    m_ini.SetLongValue("g59","keyerSpeed",m_keyer_speed,"# keyer speed in wpm", true);
+    if(NULL != mp_cmd)
+    {
+        mp_cmd->k_speed(wpm);
+    }
+}
+
+void Genesis::SetKeyerRatio(float ratio_dot_to_dash)
+{
+    m_keyer_ratio = ratio_dot_to_dash;
+    m_ini.SetDoubleValue("g59","keyerRatio",m_keyer_ratio,"# keyer weight 1:ratio", true);
+    if(NULL != mp_cmd)
+    {
+        mp_cmd->k_ratio(m_keyer_ratio);
+    }
+}
+
+void Genesis::SetKeyerMode(int keyer_mode)
+{
+    m_keyer_mode = keyer_mode;
+    m_ini.SetLongValue("g59","keyerMode",m_keyer_mode,"# keyer mode code", true);
+    if(NULL != mp_cmd)
+    {
+        mp_cmd->k_mode(m_keyer_mode);
+    }
 }
 
 bool Genesis::LoadConfigFile()
@@ -296,10 +300,64 @@ bool Genesis::SaveConfigFile()
 /**************************************************************/
 /** Class G59                                                 */
 /**************************************************************/
+const Genesis::BandFilters_t G59::ms_g59_bandfilters(
+{
+    { 
+        1,
+        "160m",
+        1800000,
+        2000000
+    },
+
+    { 
+        2,
+        "80m",
+        3500000,
+        4000000
+    },
+    { 
+        3,
+        "60-40m",
+        5403500,
+        7300000
+    },
+    { 
+        4,
+        "30-20m",
+        10100000,
+        14350000
+    },
+    { 
+        5,
+        "17-15m",
+        18068000,
+        21450000
+    },
+    { 
+        6,
+        "12-10m",
+        24890000,
+        29700000
+    },
+    { 
+        7,
+        "6m",
+        50000000,
+        54000000
+    },
+    { 
+        0,
+        "gen",
+        0,
+        1024000000
+    }
+});
+
 G59::G59() 
     : Genesis(0x1970)
 {
     mp_cmd = new G59Cmd();
+    m_bandfilters = ms_g59_bandfilters;
 };
 
 G59::~G59()
@@ -324,10 +382,52 @@ std::string G59::GetModel()
 /**************************************************************/
 /** Class G11                                                 */
 /**************************************************************/
+const Genesis::BandFilters_t G11::ms_g11_bandfilters(
+{
+    {
+        0,
+        "160m",
+        1800000,
+        2000000
+    },
+
+    {
+        1,
+        "80m",
+        3500000,
+        4000000
+    },
+    {
+        2,
+        "60-40m",
+        5403500,
+        7300000
+    },
+    {
+        3,
+        "30m",
+        10100000,
+        10150000
+    },
+    {
+        4,
+        "20-17m",
+        14000000,
+        18168000
+    },
+    {
+        5,
+        "gen",
+        0,
+        1024000000
+    }
+});
+
 G11::G11() 
     : Genesis(0x1971)
 {
     mp_cmd = new G11Cmd();
+    m_bandfilters = ms_g11_bandfilters;
 };
 
 G11::~G11()

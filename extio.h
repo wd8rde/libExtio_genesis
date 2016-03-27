@@ -52,6 +52,10 @@ void HideGUI();
 void RawDataReady(long samprate, int *Ldata, int *Rdata, int numsamples);
 void GetFilters(int& loCut, int& hiCut, int& pitch);
 // Genesis routs
+void EnableLineMic(int onoff);
+void EnablePA(int onoff);
+void SetKeyerRatio(float ratio_dot_to_dash);
+void SetKeyerMode(int keyer_mode);
 void SetWpm(int wpm);
 
 //

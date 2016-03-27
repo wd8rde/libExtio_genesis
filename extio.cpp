@@ -380,4 +380,52 @@ void SetWpm(int wpm)
     }
 }
 
+void EnableLineMic(int onoff)
+{
+    if(NULL != mp_genesis)
+    {
+        mp_genesis->EnableLineMic((0 == onoff)?false:true);
+    }
+    else
+    {
+        LOG_DEBUG("%s:%d ERROR: mp_genesis is NULL\n",__FUNCTION__,__LINE__);
+    }
+}
+
+void EnablePA(int onoff)
+{
+    if(NULL != mp_genesis)
+    {
+        mp_genesis->EnablePA10((0 == onoff)?false:true);
+    }
+    else
+    {
+        LOG_DEBUG("%s:%d ERROR: mp_genesis is NULL\n",__FUNCTION__,__LINE__);
+    }
+}
+
+void SetKeyerRatio(float ratio_dot_to_dash)
+{
+    if(NULL != mp_genesis)
+    {
+        mp_genesis->SetKeyerRatio(ratio_dot_to_dash);
+    }
+    else
+    {
+        LOG_DEBUG("%s:%d ERROR: mp_genesis is NULL\n",__FUNCTION__,__LINE__);
+    }
+}
+
+void SetKeyerMode(int keyer_mode)
+{
+    if(NULL != mp_genesis)
+    {
+        mp_genesis->SetKeyerMode(keyer_mode);
+    }
+    else
+    {
+        LOG_DEBUG("%s:%d ERROR: mp_genesis is NULL\n",__FUNCTION__,__LINE__);
+    }
+}
+
 } /* extern "C" */
