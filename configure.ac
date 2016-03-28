@@ -6,7 +6,7 @@ AC_INIT(extio_genesis, new, [wd8rde@gmail.com>])
 #AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 #AM_INIT_AUTOMAKE([-Werror foreign])
 AM_INIT_AUTOMAKE([])
-AC_CONFIG_SRCDIR([g59cmd.cpp])
+AC_CONFIG_SRCDIR([genesis.cpp])
 #AC_CONFIG_HEADER([config.h])
 
 AC_CANONICAL_HOST
@@ -27,8 +27,8 @@ if test $host_cpu = "powerpc" && test $host_vendor = "apple"; then
 fi
 
 # Checks for libraries.
-AC_CHECK_LIB([usb-1.0], [libusb_get_active_config_descriptor], ,
-	[AC_MSG_ERROR("Could not find library usb-1.0.")])
+AC_CHECK_LIB([hidapi-libusb], [hid_get_serial_number_string], ,
+	[AC_MSG_ERROR("Could not find library hidapi-libusb.")])
 AC_CHECK_LIB([pthread], [pthread_create])
 
 # Checks for header files.
@@ -48,7 +48,7 @@ AC_TYPE_UID_T
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_STAT
 AC_CHECK_FUNCS([memset])
-PKG_CHECK_MODULES(USB, libusb-1.0 >= 1.0)
+PKG_CHECK_MODULES(HID, hidapi-libusb >= 0.8)
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

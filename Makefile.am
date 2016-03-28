@@ -1,15 +1,16 @@
 
 lib_LTLIBRARIES = libextio_genesis.la
-libextio_genesis_la_CPPFLAGS = $(USB_CFLAGS) -std=gnu++0x
-libextio_genesis_la_CDFLAGS = $(USB_LIBS)
+libextio_genesis_la_CPPFLAGS = $(HID_CFLAGS) -std=gnu++0x
+libextio_genesis_la_CDFLAGS = $(HID_LIBS)
 
 libextio_genesis_la_SOURCES = \
 	extio.cpp\
 	extio.h\
 	genesis.cpp\
-	g59cmd.cpp\
-	g59cmdpacket.cpp\
-	usbutil.cpp\
+	cmdbase.cpp\
+	cmdpacket.cpp\
+	genesis_observer.cpp\
+	hid_util.cpp\
 	bsd_string.c\
 	si570.c\
 	simpleini-master/ConvertUTF.c
