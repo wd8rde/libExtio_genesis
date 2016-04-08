@@ -25,6 +25,7 @@ Genesis::Genesis(int productid)
     ,m_initialized(false)
     ,m_hasMicPreamp(true)
     ,m_hasGPA10(true)
+    ,m_hasSECRX(false)
     ,m_tx_dropout_ms(0)
     ,m_keyer_mode(CmdBase::K_MODE_NONE)
     ,m_keyer_speed(13)
@@ -69,11 +70,16 @@ bool Genesis::Init()
     bool hasmultiple = false;
     m_hasGPA10 = m_ini.GetBoolValue("g59","hasGPA10", true, &hasmultiple);
     m_ini.SetBoolValue("g59","hasGPA10",m_hasGPA10,"# true if PA10 enabled", true);
+    m_hasSECRX = m_ini.GetBoolValue("g59","hasSECRX", false, &hasmultiple);
+    m_ini.SetBoolValue("g59","hasSECRX",m_hasSECRX,"# true if SECRX enabled", true);
     m_hasMicPreamp = m_ini.GetBoolValue("g59","hasMicPreamp", true, &hasmultiple);
     m_ini.SetBoolValue("g59","hasMicPreamp",m_hasMicPreamp,"# true if Mic Preamp enabled", true);
 
     //enable the GPA10 if it is available
     mp_cmd->pa10(m_hasGPA10);
+
+    //Set RX to second input if it is available
+    mp_cmd->sec_rx2(m_hasSECRX);
 
     //setup the keyer
     m_keyer_ratio = m_ini.GetDoubleValue("g59", "keyerRatio",3.0, &hasmultiple);
