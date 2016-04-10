@@ -43,6 +43,7 @@ public:
         TX_OFF,
         PA10_ON,
         LINE_MIC,
+        PTT_CMD,
         AUTO_COR,
         SEC_RX2,
         MONITOR,
@@ -93,6 +94,7 @@ public:
     tGenesisErr k_ratio(const double ratio);
     tGenesisErr pa10(const bool on_off);
     tGenesisErr line_mic(const bool on_off);
+    tGenesisErr ptt_cmd(const bool on_off);
     tGenesisErr auto_cor(const bool on_off);
     tGenesisErr sec_rx2(const bool on_off);
     tGenesisErr monitor(const bool on_off);

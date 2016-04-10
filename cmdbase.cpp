@@ -427,6 +427,11 @@ CmdBase::tGenesisErr CmdBase::line_mic(const bool on_off)
     return private_cmd_arg2only(((on_off?0x01:0x00) & 0xff), get_cmd_info(LINE_MIC).cmd_str);
 }
 
+CmdBase::tGenesisErr CmdBase::ptt_cmd(const bool on_off)
+{
+    return private_cmd_arg2only(((on_off?0x01:0x00) & 0xff), get_cmd_info(PTT_CMD).cmd_str);
+}
+
 CmdBase::tGenesisErr CmdBase::auto_cor(const bool on_off)
 {
     return private_cmd_arg2only(((on_off?0x01:0x00) & 0xff), get_cmd_info(AUTO_COR).cmd_str);
@@ -634,6 +639,13 @@ CmdBase::t_tx_state CmdBase::private_handle_cmd(t_cmd_enum cmd, CmdPacket &packe
         {
             //todo
             mp_observer->OnLineMic(ON);
+        }
+        break;
+
+    case PTT_CMD:
+        {
+            //todo
+            mp_observer->OnPttCmd(ON);
         }
         break;
     case AUTO_COR:

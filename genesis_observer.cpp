@@ -60,6 +60,10 @@ void Genesis_Observer::OnLineMic(bool on_off)
 {
     LOG_INFO("%s:%d\n",__FUNCTION__,__LINE__);
 }
+void Genesis_Observer::OnPttCmd(bool on_off)
+{
+    LOG_INFO("%s:%d\n",__FUNCTION__,__LINE__);
+}
 void Genesis_Observer::OnAutoCOR(bool on_off)
 {
     LOG_INFO("%s:%d\n",__FUNCTION__,__LINE__);

@@ -39,6 +39,7 @@ const CmdBase::t_cmdinfo G59Cmd::cmdinfo[] =
     {CmdBase::TX_OFF,  "TX_OFF"},
     {CmdBase::PA10_ON, "PA10_ON"},
     {CmdBase::LINE_MIC,"LINE/MIC"},
+    {CmdBase::PTT_CMD,"PTT_CMD"},
     {CmdBase::AUTO_COR,"AUTO_COR"},
     {CmdBase::SEC_RX2, "SEC_RX2"},
     {CmdBase::MONITOR, "MONITOR"},

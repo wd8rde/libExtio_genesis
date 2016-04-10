@@ -45,6 +45,7 @@ public:
     int m_productid;
     bool m_initialized;
     bool m_hasMicPreamp;
+    bool m_hasPTTOut;
     bool m_hasGPA10;
     bool m_hasSECRX;
     unsigned long m_tx_dropout_ms;

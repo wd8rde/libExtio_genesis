@@ -24,6 +24,7 @@ Genesis::Genesis(int productid)
     ,m_productid(productid)
     ,m_initialized(false)
     ,m_hasMicPreamp(true)
+    ,m_hasPTTOut(false)
     ,m_hasGPA10(true)
     ,m_hasSECRX(false)
     ,m_tx_dropout_ms(0)
@@ -74,6 +75,9 @@ bool Genesis::Init()
     m_ini.SetBoolValue("g59","hasSECRX",m_hasSECRX,"# true if SECRX enabled", true);
     m_hasMicPreamp = m_ini.GetBoolValue("g59","hasMicPreamp", true, &hasmultiple);
     m_ini.SetBoolValue("g59","hasMicPreamp",m_hasMicPreamp,"# true if Mic Preamp enabled", true);
+    m_hasPTTOut = m_ini.GetBoolValue("g59","hasPTTOut", false, &hasmultiple);
+    m_ini.SetBoolValue("g59","hasPTTOut",m_hasPTTOut,"# true to enable EXT PTT", true);
+
 
     //enable the GPA10 if it is available
     mp_cmd->pa10(m_hasGPA10);
@@ -155,6 +159,12 @@ bool Genesis::SetTx(bool tx_enable)
 {
     if (tx_enable)
     {
+        //enable the PTT Out line if needed
+        if (m_hasPTTOut)
+        {
+            mp_cmd->ptt_cmd(true);
+        }
+
         //enable the Mic Preamp if it is available
         if (m_hasMicPreamp)
         {
@@ -171,6 +181,8 @@ bool Genesis::SetTx(bool tx_enable)
         mp_cmd->tx(false);
         //disable the Mic Preamp
         mp_cmd->line_mic(false);
+        //disable the PTT Line
+        mp_cmd->ptt_cmd(false);
     }
 
     return true;

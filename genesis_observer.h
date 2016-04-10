@@ -17,6 +17,7 @@ public:
     virtual void OnTX(bool on_off);
     virtual void OnPA10(bool on_off);
     virtual void OnLineMic(bool on_off);
+    virtual void OnPttCmd(bool on_off);
     virtual void OnAutoCOR(bool on_off);
     virtual void OnSecondRx(bool on_off);
     virtual void OnMonitor(bool on_off);
